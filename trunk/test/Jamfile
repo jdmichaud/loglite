@@ -1,0 +1,62 @@
+# Logging library
+
+# Copyright (C) 2007 - Jean-Daniel Michaud
+# Use, modification and distribution is subject to the Boost Software License, 
+# Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at 
+# http://www.boost.org/LICENSE_1_0.txt) 
+
+# For more information, see http://www.boost.org/
+
+subproject libs/logging/test ;
+
+# bring in rules for testing
+SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
+include testing.jam ;
+
+# Make tests run by default.
+DEPENDS all : test ;
+
+exe logging_test 
+ : logging_test.cpp 
+ : <include>../ <include>$(BOOST_ROOT) <library-path>../../../stage/lib/
+ ;
+
+exe logging_test_macro
+ : logging_test_macro.cpp 
+ : <include>../ <include>$(BOOST_ROOT) <library-path>../../../stage/lib/
+ ;
+
+exe logging_test_multithread
+ : logging_test_multithread.cpp 
+ : <include>../ <include>$(BOOST_ROOT) <library-path>../../../stage/lib/
+ ;
+
+exe logging_test_hello_world
+ : logging_test_hello_world.cpp 
+ : <include>../ <include>$(BOOST_ROOT) <library-path>../../../stage/lib/
+ ;
+
+exe logging_test_xml_output
+ : logging_test_xml_output.cpp 
+ : <include>../ <include>$(BOOST_ROOT) <library-path>../../../stage/lib/
+ ;
+
+exe logging_test_multi_file
+ : logging_test_multi_file.cpp logging_test_multi_file2.cpp 
+ : <include>../ <include>$(BOOST_ROOT) <library-path>../../../stage/lib/
+ ;
+
+#{
+#  # look in BOOST_ROOT for sources first, just in this Jamfile
+#  local SEARCH_SOURCE = $(BOOST_ROOT) $(SEARCH_SOURCE) ;
+
+
+#  test-suite logging
+#    : 
+#      [ run libs/logging/test/logging_test.cpp :  :  :  :  ]
+#      [ run libs/logging/test/logging_test_macro.cpp :  :  :  :  ]
+#    : <include>../ 
+#      <include>../../../
+#      <library-path>../../../stage/lib/
+# ;
+#} 

@@ -1,0 +1,42 @@
+# Boost Logging Library Build Jamfile
+
+# (C) Copyright Jean-Daniel Michaud 2007
+
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or www.boost.org/LICENSE_1_0.txt)
+
+# See library home page at http://www.boost.org/libs/logging
+
+project
+    : requirements <linkflags>/LIBPATH:\"$(BOOST_ROOT)/stage/lib\" <linkflags>libboost_thread-vc80-mt-gd-1_34.lib <linkflags>libboost_date_time-vc80-mt-gd-1_34.lib
+;
+
+exe logging_test 
+ : logging_test.cpp 
+ : <include>../ <include>$(BOOST_ROOT) 
+ ;
+
+exe logging_test_macro
+ : logging_test_macro.cpp 
+ : <include>../ <include>$(BOOST_ROOT)
+ ;
+ 
+exe logging_test_multithread
+ : logging_test_multithread.cpp 
+ : <include>../ <include>$(BOOST_ROOT)
+ ;
+
+exe logging_test_hello_world
+ : logging_test_hello_world.cpp 
+ : <include>../ <include>$(BOOST_ROOT)
+ ;
+
+exe logging_test_xml_output
+ : logging_test_xml_output.cpp 
+ : <include>../ <include>$(BOOST_ROOT)
+ ;
+
+exe logging_test_multi_file
+ : logging_test_multi_file.cpp logging_test_multi_file2.cpp 
+ : <include>../ <include>$(BOOST_ROOT)
+ ;
