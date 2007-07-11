@@ -1,0 +1,16 @@
+//  Boost general library logging.hpp header file  ---------------------------//
+
+//  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
+//  sell and distribute this software is granted provided this copyright notice 
+//  appears in all copies. This software is provided "as is" without express or 
+//  implied warranty, and with no claim as to its suitability for any purpose.
+
+//  See http://www.boost.org for updates, documentation, and revision history.
+//  See http://www.boost.org/libs/logging/ for library home page.
+
+#ifndef _LOGGING_TEST_MULTI_FILE_H_
+#define _LOGGING_TEST_MULTI_FILE_H_
+
+int foo();
+
+#endif // ! _LOGGING_TEST_MULTI_FILE_H_
