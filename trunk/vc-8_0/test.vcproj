@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test"
-	ProjectGUID="{3421E128-C036-48F3-A94D-B5CEEF84FF51}"
+	ProjectGUID="{DBD8F522-784C-4482-A3FF-1469D14F23A9}"
 	>
 	<Platforms>
 		<Platform
@@ -135,7 +135,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\Program Files\boost_1_33_1"
+				AdditionalIncludeDirectories="..\;G:\Program Files\boost_1_34_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -164,7 +164,7 @@
 				OutputFile=".\test___Win32_Debug/test.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="G:\Program Files\boost_1_33_1\stage\lib"
+				AdditionalLibraryDirectories="G:\Program Files\boost_1_34_0\stage\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\test___Win32_Debug/test.pdb"
 				SubSystem="1"

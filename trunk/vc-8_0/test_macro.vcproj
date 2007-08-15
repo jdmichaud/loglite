@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test_macro"
-	ProjectGUID="{3799EC4B-490F-4860-85B1-FD0317D79E18}"
+	ProjectGUID="{1F0AFB28-426B-4634-AEBF-02F2D59E88DE}"
 	>
 	<Platforms>
 		<Platform
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\Program Files\boost_1_33_1"
+				AdditionalIncludeDirectories="..\;G:\Program Files\boost_1_34_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -72,7 +72,7 @@
 				OutputFile=".\test_macro___Win32_Debug/test_macro.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="G:\Program Files\boost_1_33_1\stage\lib"
+				AdditionalLibraryDirectories="G:\Program Files\boost_1_34_0\stage\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\test_macro___Win32_Debug/test_macro.pdb"
 				SubSystem="1"

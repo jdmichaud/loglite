@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test_multithread"
-	ProjectGUID="{5C54104A-438D-471F-A87B-849BB1CA9925}"
+	ProjectGUID="{953A6771-2C38-4789-8687-C7B505B71AF4}"
 	>
 	<Platforms>
 		<Platform
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\Program Files\boost_1_33_1"
+				AdditionalIncludeDirectories="..\;G:\Program Files\boost_1_34_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -72,7 +72,7 @@
 				OutputFile=".\test_multithread___Win32_Debug/test_multithread.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="G:\Program Files\boost_1_33_1\stage\lib"
+				AdditionalLibraryDirectories="G:\Program Files\boost_1_34_0\stage\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\test_multithread___Win32_Debug/test_multithread.pdb"
 				SubSystem="1"

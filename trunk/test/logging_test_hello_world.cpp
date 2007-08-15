@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/logging.hpp>
+#include <logging.hpp>
 
 int main()
 {

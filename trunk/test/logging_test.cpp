@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include <boost/logging.hpp>
+#include <logging.hpp>
 
 int main(int argc, char **argv)
 {

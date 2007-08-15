@@ -9,7 +9,7 @@
 //  See http://www.boost.org/libs/logging/ for library home page.
 
 #include <fstream>
-#include <boost/logging.hpp>
+#include <logging.hpp>
 
 int main(int argc, char **argv)
 {

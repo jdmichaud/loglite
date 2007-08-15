@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="logging"
-	ProjectGUID="{C3CFBBCF-369E-4180-A04A-CE4E2B9F4CEA}"
+	ProjectGUID="{C8BD6DEA-26A2-484C-9DD8-DEBD20864617}"
 	>
 	<Platforms>
 		<Platform
@@ -205,7 +205,7 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\..\..\boost\logging.hpp"
+				RelativePath="..\logging.hpp"
 				>
 			</File>
 		</Filter>
