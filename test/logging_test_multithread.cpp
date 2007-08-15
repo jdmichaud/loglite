@@ -11,7 +11,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/bind.hpp>
 #include <fstream>
-#include <boost/logging.hpp>
+#include <logging.hpp>
 
 void thread_log_something()
 {

@@ -27,6 +27,7 @@
 #endif // BOOST_HAS_THREADS
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/format.hpp>
 
 #define BOOST_LOG_INIT(format, max_log_level)                                  \
 {                                                                              \
@@ -76,6 +77,8 @@ namespace boost {
     class log_element;
     class level_element;
     class trace_element;
+    class format;
+    class sink;
     class logger;
     
 //  Logging typedefs declarations --------------------------------------------//
@@ -103,9 +106,7 @@ namespace boost {
     public:
       std::string to_string(level_t l) 
       { 
-        char  buffer[3];
-        _snprintf(buffer, 3, "%i", l);
-        return buffer; 
+        return str(boost::format("%i") % l);
       };
 
       std::string visit(logger &l, const log_param_t &log_param);
@@ -123,9 +124,7 @@ namespace boost {
     public:
       std::string to_string(unsigned int l) 
       {
-        char  buffer[BOOST_MAX_LINE_STR_SIZE];
-        _snprintf(buffer, BOOST_MAX_LINE_STR_SIZE, "%i", l);
-        return buffer; 
+        return str(boost::format("%i") % l);
       }
       std::string visit(logger &l, const log_param_t &log_param);
     };
@@ -174,49 +173,56 @@ namespace boost {
       std::string m_literal;
     };
 
+
+//  Format class declatation -------------------------------------------------//
+    class format
+    {
+    public:
+      format(element_list_t &e) 
+        : m_element_list(element_list), m_identifier("unnamed") {}
+
+      format(element_list_t &e, const std::string &identifier) 
+        : m_element_list(element_list), m_identifier(identifier) {}
+
+    private:
+      element_list_t    m_element_list;
+      std::string       m_identifier;
+    };
+
+//  Sink class declaration ---------------------------------------------------//
+    class sink
+    {
+    public:
+      sink(std::ostream *s, level_t max_log_level)
+      {
+        if (s)
+          if (*s == std::cout || *s == std::cerr || *s == std::clog)
+            m_output_stream(s, null_deleter());
+          else
+            m_output_stream(s);
+
+        set_max_log_level(max_log_level);
+      }
+
+      void set_max_log_level(level_t max_log_level)
+      { 
+        m_max_log_level = ((BOOST_LEVEL_UP_LIMIT < max_log_level) 
+          ? BOOST_LEVEL_UP_LIMIT : max_log_level);
+      }
+
+      inline level_t get_max_log_level() { return m_max_log_level; }
+
+    private:
+      level_t                         m_max_log_level;
+      boost::shared_ptr<std::ostream> m_output_stream;
+    };
+
 //  Logger class declaration  ------------------------------------------------//
     class logger
     {
       public: 
-        logger(element_list_t &e, level_t max_log_level = 1) 
-           : m_element_list(e), m_max_log_level(max_log_level) {}
-
-        void set_format(element_list_t &e) 
-        { 
-          m_element_list.insert(m_element_list.begin(), e.begin(), e.end());
-        }
-
-        void set_max_log_level(level_t max_log_level)
-        { 
-          m_max_log_level = ((BOOST_LEVEL_UP_LIMIT < max_log_level) 
-            ? BOOST_LEVEL_UP_LIMIT : max_log_level);
-        }
-
-        inline level_t get_max_log_level()
-        {
-          return m_max_log_level;
-        }
+        logger() {}
         
-        void set_output_streams(stream_list_t &s) 
-        { 
-          m_stream_list.insert(m_stream_list.begin(), s.begin(), s.end()); 
-        }
-
-		    void add_output_streams(std::ostream *s) 
-        { 
-          if (s)
-            if (*s == std::cout || *s == std::cerr || *s == std::clog)
-              m_stream_list.push_back
-              (
-              boost::shared_ptr<std::ostream>(s, null_deleter())
-              );
-            else
-              m_stream_list.push_back
-              (
-              boost::shared_ptr<std::ostream>(s)
-              );
-        }
-
         static logger *get_instance()
         {
 #if defined(BOOST_HAS_THREADS)
@@ -308,9 +314,7 @@ namespace boost {
         logger() : m_max_log_level(0) {}
 
       private:
-        element_list_t    m_element_list;
-        stream_list_t     m_stream_list;
-        level_t           m_max_log_level;
+
 #if defined(BOOST_HAS_THREADS)
       	boost::mutex      m_mutex;
 #endif // BOOST_HAS_THREADS

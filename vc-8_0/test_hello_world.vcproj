@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test_hello_world"
-	ProjectGUID="{6FF1BDFF-E972-4349-850B-30910718C358}"
+	ProjectGUID="{3FF3DB1D-D2FB-41C2-821D-DFD9F9C6861C}"
 	>
 	<Platforms>
 		<Platform
@@ -135,7 +135,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="G:\Program Files\boost_1_33_1"
+				AdditionalIncludeDirectories="..\;G:\Program Files\boost_1_34_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -164,7 +164,7 @@
 				OutputFile=".\test_hello_world___Win32_Debug/test_hello_world.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="G:\Program Files\boost_1_33_1\stage\lib"
+				AdditionalLibraryDirectories="G:\Program Files\boost_1_34_0\stage\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\test_hello_world___Win32_Debug/test_hello_world.pdb"
 				SubSystem="1"
