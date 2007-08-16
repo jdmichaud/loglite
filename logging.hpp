@@ -192,36 +192,36 @@ namespace boost {
 
       std::string produce_trace(const log_param_t &log_param)
       {
-	element_list_t::iterator e_it = m_element_list.begin();
-	std::stringstream str_stream;
-	for (; e_it != m_element_list.end(); ++e_it)
+	      element_list_t::iterator e_it = m_element_list.begin();
+	      std::stringstream str_stream;
+	      for (; e_it != m_element_list.end(); ++e_it)
         {
-	  str_stream << (*e_it)->visit(*this, log_param);
-	}
+	        str_stream << (*e_it)->visit(*this, log_param);
+	      }
 
-	return str_stream.str();
+	      return str_stream.str();
       }
 
       // Visitors for the log elements
       std::string accept(log_element &e)
       {
-	return e.to_string();
+	      return e.to_string();
       }
       std::string accept(level_element &e, level_t l)
       {
-	return e.to_string(l);
+	      return e.to_string(l);
       }
       std::string accept(trace_element &e, const std::string& s)
       {
-	return e.to_string(s);
+        return e.to_string(s);
       }
       std::string accept(filename_element &e, const std::string& s)
       {
-	return e.to_string(s);
+        return e.to_string(s);
       }
       std::string accept(line_element &e, unsigned int l)
       {
-	return e.to_string(l);
+        return e.to_string(l);
       }
 
     private:
@@ -233,13 +233,13 @@ namespace boost {
     class sink
     {
     public:
-      sink(std::ostream *s, level_t max_log_level)
+      sink(std::ostream *s, level_t max_log_level = 1)
       {
         if (s)
           if (*s == std::cout || *s == std::cerr || *s == std::clog)
-            m_output_stream = shared_ptr<std::ostream *>(s, null_deleter());
+            m_output_stream.reset(s, null_deleter());
           else
-            m_output_stream = shared_ptr<std::ostream *>(s);
+            m_output_stream.reset(s);
 
         set_max_log_level(max_log_level);
       }
