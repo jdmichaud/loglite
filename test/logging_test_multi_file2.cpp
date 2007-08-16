@@ -8,7 +8,7 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 //  See http://www.boost.org/libs/logging/ for library home page.
 
-#include <boost/logging.hpp>
+#include <logging.hpp>
 
 int foo()
 {

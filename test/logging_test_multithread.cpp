@@ -27,11 +27,10 @@ int main(int argc, char **argv)
                       >> boost::logging::line >> "),"
                       >> boost::logging::time >> ","
                       >> boost::logging::trace
-                      >> boost::logging::eol),
-                      2);
+                      >> boost::logging::eol))
 
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"));
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout);
+  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"), 2);
+  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
 
   boost::thread_group thrd;
   unsigned int i;

@@ -10,14 +10,13 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/logging.hpp>
+#include <logging.hpp>
 #include "logging_test_multi_file2.h"
 
 int main()
 {
-  BOOST_LOG_INIT((boost::logging::trace >> boost::logging::eol), // log format
-                  1);                                             // log level
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout);
+  BOOST_LOG_INIT((boost::logging::trace >> boost::logging::eol)) // log format
+  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 1);
   BOOST_LOG(1, "Multi file test - call to foo:");
   
   foo();

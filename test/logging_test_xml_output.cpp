@@ -9,7 +9,7 @@
 //  See http://www.boost.org/libs/logging/ for library home page.
 
 #include <fstream>
-#include <boost/logging.hpp>
+#include <logging.hpp>
 
 int main(int argc, char **argv)
 {
@@ -21,11 +21,10 @@ int main(int argc, char **argv)
       "\t\t<trace>" >> boost::logging::eol >> "\t\t\t" >>
         boost::logging::trace >> boost::logging::eol >>
       "\t\t</trace>" >> boost::logging::eol >>
-    "\t</log>" >> boost::logging::eol),
-    2); // Max log level
-  
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.xml"));
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout);
+    "\t</log>" >> boost::logging::eol))
+
+  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.xml"), 2);
+  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
 
   boost::gregorian::date d(boost::gregorian::day_clock::local_day());
   std::string date = boost::gregorian::to_iso_extended_string(d);
