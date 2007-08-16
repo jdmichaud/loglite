@@ -29,17 +29,19 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
-#define BOOST_LOG_INIT(format, max_log_level)                                  \
+#define BOOST_LOG_INIT(format, ostream, max_log_level)		               \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
-  l->set_format(format);                                                       \
-  l->set_max_log_level(max_log_level);                                         \
+  boost::format f(format);						       \
+  boost::sink s(ostream, max_log_level);				       \
+  l->add_format(f);                                                            \
+  l->add_sink(s, f);                                                           \
 }
 
-#define BOOST_LOG_ADD_OUTPUT_STREAM(stream)                                    \
+#define BOOST_LOG_ADD_OUTPUT_STREAM( stream, format )                          \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
-  l->add_output_streams(stream);                                               \
+  l->add_sink(stream, format);                                                 \
 }
 
 #define BOOST_LOG(level, _trace)                                               \
@@ -83,10 +85,14 @@ namespace boost {
     
 //  Logging typedefs declarations --------------------------------------------//
     typedef enum { LEVEL = 0, TRACE, FILENAME, LINE }   param_e;
+    typedef enum { SINK = 0, FORMAT }                   sink_format_assoc_e;
     typedef std::list<boost::shared_ptr<log_element> >  element_list_t;
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
     typedef unsigned short                              level_t;
     typedef tuple<level_t, std::string, std::string, unsigned int> log_param_t;
+    typedef std::list<format>                           format_list_t;
+    typedef tuple<sink, format&>                        sink_format_assoc_t;
+    typedef std::list<sink_format_assoc_t>             sink_format_assoc_list_t;
 
 //  Used for shared_ptr() on statically allocated log_element ----------------//
     struct null_deleter
@@ -98,7 +104,7 @@ namespace boost {
     public:
       virtual std::string to_string() { assert(0); return ""; };
 
-      virtual std::string visit(logger &l, const log_param_t &log_param);
+      virtual std::string visit(format &f, const log_param_t &log_param);
     };
     
     class level_element : public log_element
@@ -109,14 +115,14 @@ namespace boost {
         return str(boost::format("%i") % l);
       };
 
-      std::string visit(logger &l, const log_param_t &log_param);
+      std::string visit(format &f, const log_param_t &log_param);
     };
     
     class filename_element : public log_element
     {
     public:
       std::string to_string(const std::string &f) { return f; }
-      std::string visit(logger &l, const log_param_t &log_param);
+      std::string visit(format &f, const log_param_t &log_param);
     };
     
     class line_element : public log_element
@@ -126,7 +132,7 @@ namespace boost {
       {
         return str(boost::format("%i") % l);
       }
-      std::string visit(logger &l, const log_param_t &log_param);
+      std::string visit(format &f, const log_param_t &log_param);
     };
     
     class date_element : public log_element
@@ -155,7 +161,7 @@ namespace boost {
     public:
       std::string to_string(const std::string& s) { return s; };
 
-      std::string visit(logger &l, const log_param_t &log_param);
+      std::string visit(format &f, const log_param_t &log_param);
     };
 
     class eol_element : public log_element
@@ -178,11 +184,45 @@ namespace boost {
     class format
     {
     public:
-      format(element_list_t &e) 
-        : m_element_list(element_list), m_identifier("unnamed") {}
+      format(element_list_t e) 
+        : m_element_list(e), m_identifier("unnamed") {}
 
-      format(element_list_t &e, const std::string &identifier) 
-        : m_element_list(element_list), m_identifier(identifier) {}
+      format(element_list_t e, const std::string &identifier) 
+        : m_element_list(e), m_identifier(identifier) {}
+
+      std::string produce_trace(const log_param_t &log_param)
+      {
+	element_list_t::iterator e_it = m_element_list.begin();
+	std::stringstream str_stream;
+	for (; e_it != m_element_list.end(); ++e_it)
+        {
+	  str_stream << (*e_it)->visit(*this, log_param);
+	}
+
+	return str_stream.str();
+      }
+
+      // Visitors for the log elements
+      std::string accept(log_element &e)
+      {
+	return e.to_string();
+      }
+      std::string accept(level_element &e, level_t l)
+      {
+	return e.to_string(l);
+      }
+      std::string accept(trace_element &e, const std::string& s)
+      {
+	return e.to_string(s);
+      }
+      std::string accept(filename_element &e, const std::string& s)
+      {
+	return e.to_string(s);
+      }
+      std::string accept(line_element &e, unsigned int l)
+      {
+	return e.to_string(l);
+      }
 
     private:
       element_list_t    m_element_list;
@@ -197,9 +237,9 @@ namespace boost {
       {
         if (s)
           if (*s == std::cout || *s == std::cerr || *s == std::clog)
-            m_output_stream(s, null_deleter());
+            m_output_stream = shared_ptr<std::ostream *>(s, null_deleter());
           else
-            m_output_stream(s);
+            m_output_stream = shared_ptr<std::ostream *>(s);
 
         set_max_log_level(max_log_level);
       }
@@ -212,114 +252,20 @@ namespace boost {
 
       inline level_t get_max_log_level() { return m_max_log_level; }
 
+      void consume_trace(format &f, const log_param_t &log_param)
+      {
+	/* make here check to avoid producing a useless trace */
+	if (get<LEVEL>(log_param) > m_max_log_level)
+	  return;
+
+	*m_output_stream << f.produce_trace(log_param);
+      }
+
     private:
-      level_t                         m_max_log_level;
-      boost::shared_ptr<std::ostream> m_output_stream;
+      level_t                  m_max_log_level;
+      shared_ptr<std::ostream> m_output_stream;
     };
-
-//  Logger class declaration  ------------------------------------------------//
-    class logger
-    {
-      public: 
-        logger() {}
-        
-        static logger *get_instance()
-        {
-#if defined(BOOST_HAS_THREADS)
-          static boost::mutex m_inst_mutex;
-          boost::mutex::scoped_lock scoped_lock(m_inst_mutex);
-#endif // BOOST_HAS_THREADS
-          static logger             *l = NULL;
-          
-          if (!l)
-          {
-            l = new logger();
-            static shared_ptr<logger> s_ptr_l(l);
-          }
-          
-          return l;
-        }
-        
-        // Visitors for the log elements
-        std::string accept(log_element &e)
-        {
-          return e.to_string();
-        }
-        std::string accept(level_element &e, level_t l)
-        {
-          return e.to_string(l);
-        }
-        std::string accept(trace_element &e, const std::string& s)
-        {
-          return e.to_string(s);
-        }
-        std::string accept(filename_element &e, const std::string& s)
-        {
-          return e.to_string(s);
-        }
-        std::string accept(line_element &e, unsigned int l)
-        {
-          return e.to_string(l);
-        }
-      
-        void trace(unsigned short     l, 
-                   const std::string &t, 
-                   const std::string &f, 
-                   unsigned int      ln)
-        {
-#if defined(BOOST_HAS_THREADS)
-          boost::mutex::scoped_lock scoped_lock(m_mutex);
-#endif // BOOST_HAS_THREADS
-          if (l > m_max_log_level)
-             return;
-    
-          log_param_t log_param(l, t, f, ln);
-          
-          element_list_t::iterator e_it = m_element_list.begin();
-          std::stringstream str_stream;
-          for (; e_it != m_element_list.end(); ++e_it)
-          {
-            str_stream << (*e_it)->visit(*this, log_param);
-          }
-    
-          stream_list_t::iterator s_it = m_stream_list.begin();
-          for (; s_it != m_stream_list.end(); ++s_it)
-          {
-            **s_it << str_stream.str();
-          }
-        }
-
-        void unformatted_trace(unsigned short     l, 
-                               const std::string &t, 
-                               const std::string &f, 
-                               unsigned int      ln)
-        {
-#if defined(BOOST_HAS_THREADS)
-          boost::mutex::scoped_lock scoped_lock(m_mutex);
-#endif // BOOST_HAS_THREADS
-          if (l > m_max_log_level)
-             return;
-    
-          stream_list_t::iterator s_it = m_stream_list.begin();
-          for (; s_it != m_stream_list.end(); ++s_it)
-          {
-            **s_it << t;
-          }
-        }
-
-      public:
-        std::stringstream m_string_stream;
-
-      private:
-        logger() : m_max_log_level(0) {}
-
-      private:
-
-#if defined(BOOST_HAS_THREADS)
-      	boost::mutex      m_mutex;
-#endif // BOOST_HAS_THREADS
-    };  // logger
-
+   
 //  Element static instantiations --------------------------------------------//
     static level_element     level     = level_element();
     static filename_element  filename  = filename_element();
@@ -328,36 +274,111 @@ namespace boost {
     static time_element      time      = time_element();
     static trace_element     trace     = trace_element();
     static eol_element       eol       = eol_element();
+
+//  Logger class declaration  ------------------------------------------------//
+    class logger
+    {
+    public: 
+      logger() {}
+        
+      static logger *get_instance()
+      {
+#if defined(BOOST_HAS_THREADS)
+	static boost::mutex m_inst_mutex;
+	boost::mutex::scoped_lock scoped_lock(m_inst_mutex);
+#endif // BOOST_HAS_THREADS
+	static logger             *l = NULL;
+        
+	if (!l)
+        {
+	  l = new logger();
+	  static shared_ptr<logger> s_ptr_l(l);
+	}
+          
+	return l;
+      }
+
+      void add_format(const format &f)
+      {
+	m_format_list.push_back(f);
+      }
+
+      void add_sink(const sink &s)
+      {
+	m_sink_format_assoc.push_back
+	  (
+	   sink_format_assoc_t(s, *m_format_list.begin())
+	  );
+      }
+
+      void add_sink(const sink &s, format &f)
+      {
+	m_sink_format_assoc.push_back(sink_format_assoc_t(s, f));
+      }
+           
+      void trace(unsigned short     l, 
+		 const std::string &t, 
+		 const std::string &f, 
+		 unsigned int      ln)
+      {
+#if defined(BOOST_HAS_THREADS)
+	boost::mutex::scoped_lock scoped_lock(m_mutex);
+#endif // BOOST_HAS_THREADS
+
+	log_param_t log_param(l, t, f, ln);
+	sink_format_assoc_list_t::iterator 
+	  s_it = m_sink_format_assoc.begin();
+	for (; s_it != m_sink_format_assoc.end(); ++s_it)
+        {
+	  get<SINK>(*s_it).consume_trace(get<FORMAT>(*s_it), log_param);
+	}
+      }
+      
+      void unformatted_trace(unsigned short     l, 
+			     const std::string &t, 
+			     const std::string &f, 
+			     unsigned int      ln);
+
+    public:
+      std::stringstream m_string_stream;
+      
+    private:
+      format_list_t            m_format_list;
+      sink_format_assoc_list_t m_sink_format_assoc;
+#if defined(BOOST_HAS_THREADS)
+      boost::mutex             m_mutex;
+#endif // BOOST_HAS_THREADS
+    };  // logger
     
 //  Element functions definition ---------------------------------------------//
-    inline std::string log_element::visit(logger &l, 
+    inline std::string log_element::visit(format &f, 
                                           const log_param_t &log_param)
     {
-      return l.accept(*this);
+      return f.accept(*this);
     }
 
-    inline std::string level_element::visit(logger &l, 
+    inline std::string level_element::visit(format &f, 
                                             const log_param_t &log_param)
     {
-      return l.accept(*this, get<LEVEL>(log_param));
+      return f.accept(*this, get<LEVEL>(log_param));
     }
 
-    inline std::string trace_element::visit(logger &l, 
+    inline std::string trace_element::visit(format &f, 
                                             const log_param_t &log_param)
     {
-      return l.accept(*this, get<TRACE>(log_param));
+      return f.accept(*this, get<TRACE>(log_param));
     }
 
-    inline std::string filename_element::visit(logger &l, 
+    inline std::string filename_element::visit(format &f, 
                                                const log_param_t &log_param)
     {
-      return l.accept(*this, get<FILENAME>(log_param));
+      return f.accept(*this, get<FILENAME>(log_param));
     }
 
-    inline std::string line_element::visit(logger &l, 
+    inline std::string line_element::visit(format &f, 
                                            const log_param_t &log_param)
     {
-      return l.accept(*this, get<LINE>(log_param));
+      return f.accept(*this, get<LINE>(log_param));
     }
 
   } // !namespace logging
@@ -387,7 +408,7 @@ inline boost::logging::element_list_t &operator>>(
 }
 
 inline boost::logging::element_list_t operator>>(
-  std::string s, 
+  const std::string &s, 
   boost::logging::log_element &rhs)
 {
   boost::logging::element_list_t l;
@@ -401,12 +422,31 @@ inline boost::logging::element_list_t operator>>(
 
 inline boost::logging::element_list_t &operator>>(
   boost::logging::element_list_t &lhs, 
-  std::string s)
+  const std::string &s)
 { 
   boost::shared_ptr<boost::logging::literal_element> 
     p(new boost::logging::literal_element(s));
   lhs.push_back(p);
   return lhs;
+}
+
+void boost::logging::logger::unformatted_trace(unsigned short     l, 
+					       const std::string &t, 
+					       const std::string &f, 
+					       unsigned int      ln)
+{
+#if defined(BOOST_HAS_THREADS)
+  boost::mutex::scoped_lock scoped_lock(m_mutex);
+#endif // BOOST_HAS_THREADS
+  log_param_t log_param(l, t, f, ln);
+  sink_format_assoc_list_t::iterator 
+    s_it = m_sink_format_assoc.begin();
+  for (; s_it != m_sink_format_assoc.end(); ++s_it)
+    {
+      boost::logging::format no_format(line >> eol);
+      get<SINK>(*s_it).consume_trace(no_format, 
+				     log_param);
+    }
 }
 
 #endif  // !BOOST_LOGGING_HPP
