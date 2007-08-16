@@ -18,12 +18,11 @@ int main(int argc, char **argv)
                       >> boost::logging::line >> "),"
                       >> boost::logging::time >> ","
                       >> boost::logging::trace
-                      >> boost::logging::eol), // log format
-                      2);                      // log level
+                      >> boost::logging::eol)) // log format
 
 
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"));
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout);
+  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"), 2);
+  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
   BOOST_LOG(1, "something");
   BOOST_LOG(2, "something else");
   BOOST_LOG(3, "doesn't matter");
