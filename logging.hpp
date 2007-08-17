@@ -16,6 +16,7 @@
 #include <ostream>
 #include <sstream>
 #include <list>
+#include <exception>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
 #ifndef BOOST_CONFIG_HPP
@@ -312,7 +313,7 @@ namespace boost {
       void add_sink(const sink &s)
       {
         if (m_format_list.begin() == m_format_list.end())
-          throw std::exception("no format defined");
+          throw "no format defined";
 
         m_sink_format_assoc.push_back
           (
@@ -407,8 +408,8 @@ inline boost::logging::element_list_t operator>>(
   return l;
 }
 
-inline boost::logging::element_list_t &operator>>(
-  boost::logging::element_list_t &lhs, 
+inline boost::logging::element_list_t operator>>(
+  boost::logging::element_list_t lhs, 
   boost::logging::log_element &rhs)
 { 
   lhs.push_back(boost::shared_ptr<boost::logging::log_element> 
@@ -429,8 +430,8 @@ inline boost::logging::element_list_t operator>>(
   return l;
 }
 
-inline boost::logging::element_list_t &operator>>(
-  boost::logging::element_list_t &lhs, 
+inline boost::logging::element_list_t operator>>(
+  boost::logging::element_list_t lhs, 
   const std::string &s)
 { 
   boost::shared_ptr<boost::logging::literal_element> 
@@ -453,11 +454,8 @@ void boost::logging::logger::unformatted_trace(unsigned short     l,
     s_it = m_sink_format_assoc.begin();
   for (; s_it != m_sink_format_assoc.end(); ++s_it)
     {
-      get<SINK>(*s_it).consume_trace
-        (
-          boost::logging::format(boost::logging::trace), 
-          log_param
-        );
+      boost::logging::format f(boost::logging::trace);
+      get<SINK>(*s_it).consume_trace(f, log_param);
     }
 }
 
