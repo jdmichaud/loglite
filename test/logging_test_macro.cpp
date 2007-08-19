@@ -11,6 +11,17 @@
 #include <fstream>
 #include <logging.hpp>
 
+int infinite_loop()
+{
+  while (1) ;
+}
+
+int foo()
+{
+  BOOST_LOG(1, "foo called");
+  return 7;
+}
+
 int main(int argc, char **argv)
 {
   BOOST_LOG_INIT(("[" >> boost::logging::level >> "],"
@@ -25,8 +36,9 @@ int main(int argc, char **argv)
   BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
   BOOST_LOG(1, "something");
   BOOST_LOG(2, "something else");
-  BOOST_LOG(3, "doesn't matter");
+  BOOST_LOG(3, "If you evaluate me you die!" << infinite_loop());
   char you_want[256] = "you want";
   BOOST_LOG(1, "Let's say " << you_want << " to display " << 2);
+  BOOST_LOG(1, "foo will be evaluated: " << foo());
   return 0;
 }

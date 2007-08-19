@@ -11,11 +11,11 @@
 #ifndef BOOST_LOGGING_HPP
 #define BOOST_LOGGING_HPP
 
-#include <stdio.h>
+#include <list>
 #include <string>
 #include <ostream>
 #include <sstream>
-#include <list>
+#include <stdio.h>
 #include <exception>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -48,18 +48,24 @@
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
-  l->m_string_stream.str("");                                                  \
-  l->m_string_stream << _trace;                                                \
-  l->trace(level, l->m_string_stream.str(), __FILE__, __LINE__);               \
+  if (l->get_global_max_log_level() >= level)                                  \
+  {                                                                            \
+    l->m_string_stream.str("");                                                \
+    l->m_string_stream << _trace;                                              \
+    l->trace(level, l->m_string_stream.str(), __FILE__, __LINE__);             \
+  }                                                                            \
 }
 
 #define BOOST_LOG_UNFORMATTED(level, _trace)                                   \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
-  l->m_string_stream.str("");                                                  \
-  l->m_string_stream << _trace;                                                \
-  l->unformatted_trace(level, l->m_string_stream.str(), __FILE__, __LINE__);   \
+  if (l->get_global_max_log_level() >= level)                                  \
+  {                                                                            \
+    l->m_string_stream.str("");                                                \
+    l->m_string_stream << _trace;                                              \
+    l->unformatted_trace(level, l->m_string_stream.str(), __FILE__, __LINE__); \
+  }                                                                            \
 }
 
 #define BOOST_MAX_LINE_STR_SIZE 20 // log(2^64)
@@ -173,6 +179,12 @@ namespace boost {
       std::string m_literal;
     };
 
+//  Qualifier class declaration ----------------------------------------------//
+    class log_qualifier
+    {
+
+    };
+
 //  Format class declatation -------------------------------------------------//
     class format
     {
@@ -257,7 +269,7 @@ namespace boost {
           ? BOOST_LEVEL_UP_LIMIT : max_log_level);
       }
 
-      inline level_t get_max_log_level() { return m_max_log_level; }
+      inline level_t get_max_log_level() const { return m_max_log_level; }
 
       void consume_trace(format &f, const log_param_t &log_param)
       {
@@ -286,7 +298,7 @@ namespace boost {
     class logger
     {
     public: 
-      logger() {}
+      logger() : m_global_max_log_level(0) {}
         
       static logger *get_instance()
       {
@@ -315,6 +327,14 @@ namespace boost {
         if (m_format_list.begin() == m_format_list.end())
           throw "no format defined";
 
+        // Updating global_max_level used for full lazy evaluation
+        m_global_max_log_level = 
+          (m_global_max_log_level < s.get_max_log_level()) 
+          ? 
+            s.get_max_log_level()
+          : 
+            m_global_max_log_level;
+
         m_sink_format_assoc.push_back
           (
             sink_format_assoc_t(s, *m_format_list.begin())
@@ -323,25 +343,25 @@ namespace boost {
 
       void add_sink(const sink &s, format &f)
       {
-	m_sink_format_assoc.push_back(sink_format_assoc_t(s, f));
+        m_sink_format_assoc.push_back(sink_format_assoc_t(s, f));
       }
            
       void trace(unsigned short     l, 
-		 const std::string &t, 
-		 const std::string &f, 
-		 unsigned int      ln)
+                 const std::string &t, 
+                 const std::string &f, 
+                 unsigned int      ln)
       {
 #if defined(BOOST_HAS_THREADS)
-	boost::mutex::scoped_lock scoped_lock(m_mutex);
+        boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
-	log_param_t log_param(l, t, f, ln);
-	sink_format_assoc_list_t::iterator 
-	  s_it = m_sink_format_assoc.begin();
-	for (; s_it != m_sink_format_assoc.end(); ++s_it)
+        log_param_t log_param(l, t, f, ln);
+        sink_format_assoc_list_t::iterator 
+          s_it = m_sink_format_assoc.begin();
+        for (; s_it != m_sink_format_assoc.end(); ++s_it)
         {
-	  get<SINK>(*s_it).consume_trace(get<FORMAT>(*s_it), log_param);
-	}
+          get<SINK>(*s_it).consume_trace(get<FORMAT>(*s_it), log_param);
+        }
       }
       
       void unformatted_trace(unsigned short     l, 
@@ -349,12 +369,20 @@ namespace boost {
 			     const std::string &f, 
 			     unsigned int      ln);
 
+      inline level_t get_global_max_log_level() 
+      { return m_global_max_log_level; }
+
     public:
       std::stringstream m_string_stream;
       
     private:
       format_list_t            m_format_list;
       sink_format_assoc_list_t m_sink_format_assoc;
+
+      // The global max log level is the highest log level on all the link
+      // added to the logger. If no sink as a log level high enougth for
+      // a trace, the trace does not need to be evaluated.
+      level_t                  m_global_max_log_level;
 #if defined(BOOST_HAS_THREADS)
       boost::mutex             m_mutex;
 #endif // BOOST_HAS_THREADS
