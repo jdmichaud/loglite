@@ -12,6 +12,7 @@
 #define BOOST_LOGGING_HPP
 
 #include <list>
+#include <stack>
 #include <string>
 #include <ostream>
 #include <sstream>
@@ -50,9 +51,17 @@
   assert(l);                                                                   \
   if (l->get_global_max_log_level() >= level)                                  \
   {                                                                            \
+    if (l->m_string_stream.str() != "")                                        \
+      l->m_string_stack.push(l->m_string_stream.str());                        \
+                                                                               \
     l->m_string_stream.str("");                                                \
     l->m_string_stream << _trace;                                              \
     l->trace(level, l->m_string_stream.str(), __FILE__, __LINE__);             \
+    if (!l->m_string_stack.empty())                                            \
+    {                                                                          \
+      l->m_string_stream.str(l->m_string_stack.top());                         \
+      l->m_string_stack.pop();                                                 \
+    }                                                                          \
   }                                                                            \
 }
 
@@ -62,9 +71,17 @@
   assert(l);                                                                   \
   if (l->get_global_max_log_level() >= level)                                  \
   {                                                                            \
+    if (l->m_string_stream.str() != "")                                        \
+      l->m_string_stack.push(l->m_string_stream.str());                        \
+                                                                               \
     l->m_string_stream.str("");                                                \
     l->m_string_stream << _trace;                                              \
-    l->unformatted_trace(level, l->m_string_stream.str(), __FILE__, __LINE__); \
+    l->trace(level, l->m_string_stream.str(), __FILE__, __LINE__);             \
+    if (!l->m_string_stack.empty())                                            \
+    {                                                                          \
+      l->m_string_stream.str(l->m_string_stack.top());                         \
+      l->m_string_stack.pop();                                                 \
+    }                                                                          \
   }                                                                            \
 }
 
@@ -98,7 +115,23 @@ namespace boost {
     struct null_deleter
     { void operator()(void const *) const {} };
 
-//  Logging classes declaration  ---------------------------------------------//
+//  Qualifier class declaration ----------------------------------------------//
+    class log_qualifier
+    {
+    public:
+      explicit log_qualifier(const std::string &identifier) 
+        : m_identifier(identifier) {}
+
+      inline const std::string &to_string() const
+      {
+        return m_identifier;
+      }
+
+    private:
+      std::string m_identifier;
+    };
+
+//  Element classes declaration  ---------------------------------------------//
     class log_element
     {
     public:
@@ -173,16 +206,22 @@ namespace boost {
     class literal_element : public log_element
     {
     public:
-      literal_element(const std::string &l) : m_literal(l) {}
+      explicit literal_element(const std::string &l) : m_literal(l) {}
       std::string to_string() { return m_literal; };
     private:
       std::string m_literal;
     };
 
-//  Qualifier class declaration ----------------------------------------------//
-    class log_qualifier
+    class qualifier_element : public log_element
     {
-
+    public:
+      qualifier_element(const log_qualifier &lq) 
+      {
+        m_qualifier_identifier = lq.to_string();
+      }
+      std::string to_string() { return m_qualifier_identifier; };
+    private:
+      std::string m_qualifier_identifier;
     };
 
 //  Format class declatation -------------------------------------------------//
@@ -294,6 +333,11 @@ namespace boost {
     static trace_element     trace     = trace_element();
     static eol_element       eol       = eol_element();
 
+    static log_qualifier     log       = log_qualifier("log");
+    static log_qualifier     notice    = log_qualifier("notice");
+    static log_qualifier     warning   = log_qualifier("warning");
+    static log_qualifier     error     = log_qualifier("error");
+
 //  Logger class declaration  ------------------------------------------------//
     class logger
     {
@@ -345,7 +389,10 @@ namespace boost {
       {
         m_sink_format_assoc.push_back(sink_format_assoc_t(s, f));
       }
-           
+
+      inline level_t get_global_max_log_level() 
+      { return m_global_max_log_level; }
+
       void trace(unsigned short     l, 
                  const std::string &t, 
                  const std::string &f, 
@@ -369,11 +416,9 @@ namespace boost {
 			     const std::string &f, 
 			     unsigned int      ln);
 
-      inline level_t get_global_max_log_level() 
-      { return m_global_max_log_level; }
-
     public:
-      std::stringstream m_string_stream;
+      std::stringstream       m_string_stream;
+      std::stack<std::string> m_string_stack;
       
     private:
       format_list_t            m_format_list;
