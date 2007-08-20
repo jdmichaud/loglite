@@ -13,10 +13,10 @@
 #include <boost/shared_ptr.hpp>
 #include <logging.hpp>
 
+boost::logging::logger lgr;
+
 int main(int argc, char **argv)
 {
-  boost::logging::logger lgr;
-
   lgr.add_format("[" >> boost::logging::level >> "],"
 		 >> boost::logging::filename >> "("
 		 >> boost::logging::line >> "),"
