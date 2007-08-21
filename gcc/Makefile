@@ -1,7 +1,7 @@
 # Makefile for logging
 
 CC	= g++
-BOOST	= ../../boost_1_34_1/
+BOOST	= ../../../boost_1_34_1/
 SRC	= ../test/logging_test.cpp		\
 	../test/logging_test_hello_world.cpp	\
 	../test/logging_test_macro.cpp		\
