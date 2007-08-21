@@ -31,6 +31,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
+#ifndef BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )                                               \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
@@ -84,6 +85,12 @@
     }                                                                          \
   }                                                                            \
 }
+#else // !BOOST_NO_CODE_GENERATION_FOR_LOG
+#define BOOST_LOG_INIT( format )
+#define BOOST_LOG_ADD_OUTPUT_STREAM( stream, max_log_level )
+#define BOOST_LOG(level, _trace)
+#define BOOST_LOG_UNFORMATTED(level, _trace)
+#endif // BOOST_NO_CODE_GENERATION_FOR_LOG
 
 #define BOOST_MAX_LINE_STR_SIZE 20 // log(2^64)
 #define BOOST_LEVEL_UP_LIMIT    999
