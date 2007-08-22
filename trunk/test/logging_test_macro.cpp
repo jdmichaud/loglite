@@ -33,12 +33,12 @@ int main(int argc, char **argv)
 
 
   boost::logging::sink s1(new std::ofstream("./output.log"), 2);
-  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
   s1.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
 
   boost::logging::sink s2(&std::cout, 2);
-  BOOST_LOG_ADD_OUTPUT_STREAM(s2);
   s2.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s2);
 
   BOOST_LOG_(1, "something");
   BOOST_LOG_(2, "something else");

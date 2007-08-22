@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test.vcproj", "{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_hello_world", "test_hello_world.vcproj", "{621A7B48-D22E-401A-8C59-8BC181699091}"
@@ -18,35 +18,50 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		DebugWork|Win32 = DebugWork|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}.Debug|Win32.ActiveCfg = Debug|Win32
 		{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}.Debug|Win32.Build.0 = Debug|Win32
+		{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}.Release|Win32.ActiveCfg = Release|Win32
 		{DF1ED4D2-AC2C-4B99-82E9-3089A9C8F463}.Release|Win32.Build.0 = Release|Win32
 		{621A7B48-D22E-401A-8C59-8BC181699091}.Debug|Win32.ActiveCfg = Debug|Win32
 		{621A7B48-D22E-401A-8C59-8BC181699091}.Debug|Win32.Build.0 = Debug|Win32
+		{621A7B48-D22E-401A-8C59-8BC181699091}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{621A7B48-D22E-401A-8C59-8BC181699091}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{621A7B48-D22E-401A-8C59-8BC181699091}.Release|Win32.ActiveCfg = Release|Win32
 		{621A7B48-D22E-401A-8C59-8BC181699091}.Release|Win32.Build.0 = Release|Win32
 		{8D1C5E8B-E51A-4B90-B3C2-A751FEE8F025}.Debug|Win32.ActiveCfg = Debug|Win32
 		{8D1C5E8B-E51A-4B90-B3C2-A751FEE8F025}.Debug|Win32.Build.0 = Debug|Win32
+		{8D1C5E8B-E51A-4B90-B3C2-A751FEE8F025}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{8D1C5E8B-E51A-4B90-B3C2-A751FEE8F025}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{8D1C5E8B-E51A-4B90-B3C2-A751FEE8F025}.Release|Win32.ActiveCfg = Release|Win32
 		{8D1C5E8B-E51A-4B90-B3C2-A751FEE8F025}.Release|Win32.Build.0 = Release|Win32
 		{50CE4437-21E7-4E73-B9E8-CA43334D5435}.Debug|Win32.ActiveCfg = Debug|Win32
 		{50CE4437-21E7-4E73-B9E8-CA43334D5435}.Debug|Win32.Build.0 = Debug|Win32
+		{50CE4437-21E7-4E73-B9E8-CA43334D5435}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{50CE4437-21E7-4E73-B9E8-CA43334D5435}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{50CE4437-21E7-4E73-B9E8-CA43334D5435}.Release|Win32.ActiveCfg = Release|Win32
 		{50CE4437-21E7-4E73-B9E8-CA43334D5435}.Release|Win32.Build.0 = Release|Win32
 		{F31FC929-C73D-4F50-9F26-FA8B912982F0}.Debug|Win32.ActiveCfg = Debug|Win32
 		{F31FC929-C73D-4F50-9F26-FA8B912982F0}.Debug|Win32.Build.0 = Debug|Win32
+		{F31FC929-C73D-4F50-9F26-FA8B912982F0}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{F31FC929-C73D-4F50-9F26-FA8B912982F0}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{F31FC929-C73D-4F50-9F26-FA8B912982F0}.Release|Win32.ActiveCfg = Release|Win32
 		{F31FC929-C73D-4F50-9F26-FA8B912982F0}.Release|Win32.Build.0 = Release|Win32
 		{E4536A52-FCF8-4AAC-8563-3FAB897F7959}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E4536A52-FCF8-4AAC-8563-3FAB897F7959}.Debug|Win32.Build.0 = Debug|Win32
+		{E4536A52-FCF8-4AAC-8563-3FAB897F7959}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{E4536A52-FCF8-4AAC-8563-3FAB897F7959}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{E4536A52-FCF8-4AAC-8563-3FAB897F7959}.Release|Win32.ActiveCfg = Release|Win32
 		{E4536A52-FCF8-4AAC-8563-3FAB897F7959}.Release|Win32.Build.0 = Release|Win32
 		{B5135C0B-B7DA-4B31-998E-34B5E7F2B91A}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B5135C0B-B7DA-4B31-998E-34B5E7F2B91A}.Debug|Win32.Build.0 = Debug|Win32
+		{B5135C0B-B7DA-4B31-998E-34B5E7F2B91A}.DebugWork|Win32.ActiveCfg = DebugWork|Win32
+		{B5135C0B-B7DA-4B31-998E-34B5E7F2B91A}.DebugWork|Win32.Build.0 = DebugWork|Win32
 		{B5135C0B-B7DA-4B31-998E-34B5E7F2B91A}.Release|Win32.ActiveCfg = Release|Win32
 		{B5135C0B-B7DA-4B31-998E-34B5E7F2B91A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
