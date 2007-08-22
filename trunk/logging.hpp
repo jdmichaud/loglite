@@ -25,8 +25,8 @@
 #  include <boost/config.hpp>
 #endif
 #if defined(BOOST_HAS_THREADS)
-#include <boost/thread/thread.hpp>
-#include <boost/thread/condition.hpp>
+#  include <boost/thread/thread.hpp>
+#  include <boost/thread/condition.hpp>
 #endif // BOOST_HAS_THREADS
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -108,7 +108,7 @@ namespace boost {
 //  Logging forward declarations ---------------------------------------------//
     class log_element;
     class level_element;
-    class log_qualifier;
+    class qualifier;
     class trace_element;
     class format;
     class sink;
@@ -121,33 +121,59 @@ namespace boost {
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
     typedef unsigned short                              level_t;
     typedef tuple<level_t, 
-		  const log_qualifier &,
+		  const qualifier &,
 		  std::string, 
 		  std::string, 
 		  unsigned int>                         log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format&>                        sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>             sink_format_assoc_list_t;
-    typedef std::list<log_qualifier *>                  qualifier_list_t;
+    typedef std::list<qualifier *>                      qualifier_list_t;
 
 //  Used for shared_ptr() on statically allocated log_element ----------------//
     struct null_deleter
     { void operator()(void const *) const {} };
 
 //  Qualifier class declaration ----------------------------------------------//
-    class log_qualifier
+    class qualifier
     {
     public:
-      explicit log_qualifier(const std::string &identifier) 
-        : m_identifier(identifier) {}
+      qualifier() {}
 
-      inline const std::string &to_string() const
-      {
-        return m_identifier;
-      }
-
-    private:
+      inline std::string to_string() const
+      { return m_identifier; }
+      
+      virtual bool operator==(const qualifier &q) { return false; }
+    protected:
       std::string m_identifier;
+    };
+
+    class log_qualifier : public qualifier 
+    {
+    public:
+      log_qualifier() { m_identifier = "log"; }
+      bool operator==(const log_qualifier &q) { return true; }
+    };
+
+    class notice_qualifier : public qualifier
+    {
+    public:
+      notice_qualifier() { m_identifier = "notice"; }
+      bool operator==(const notice_qualifier &q) { return true; }
+    };
+
+    class warning_qualifier : public qualifier
+    {
+    public:
+      warning_qualifier() { m_identifier = "warning"; }
+      bool operator==(const warning_qualifier &q) { return true; }
+    };
+
+    class error_qualifier : public qualifier
+    {
+    public:
+      error_qualifier() { m_identifier = "error"; }
+      bool operator==(const error_qualifier &q) { return true; }
     };
 
 //  Element classes declaration  ---------------------------------------------//
@@ -234,7 +260,7 @@ namespace boost {
     class qualifier_element : public log_element
     {
     public:
-      qualifier_element(const log_qualifier &lq) 
+      qualifier_element(const qualifier &lq) 
       {
         m_qualifier_identifier = lq.to_string();
       }
@@ -269,14 +295,14 @@ namespace boost {
 
       std::string produce_trace(const log_param_t &log_param)
       {
-	      element_list_t::iterator e_it = m_element_list.begin();
-	      std::stringstream str_stream;
-	      for (; e_it != m_element_list.end(); ++e_it)
+        element_list_t::iterator e_it = m_element_list.begin();
+        std::stringstream str_stream;
+        for (; e_it != m_element_list.end(); ++e_it)
         {
-	        str_stream << (*e_it)->visit(*this, log_param);
-	      }
+	  str_stream << (*e_it)->visit(*this, log_param);
+        }
 
-	      return str_stream.str();
+        return str_stream.str();
       }
 
       // Visitors for the log elements
@@ -335,18 +361,15 @@ namespace boost {
         if (get<LEVEL>(log_param) > m_max_log_level)
           return ;
 
-	if (std::find
-	      (
-                m_qualifier_list.begin(),
-                m_qualifier_list.end(),
-                &(get<QUALIFIER>(log_param))
-	       ) == m_qualifier_list.end())
-	  return ;
+	qualifier_list_t::const_iterator it = m_qualifier_list.begin();
+	bool qualifier_present = false;
+	for ( ; !qualifier_present && it !=  m_qualifier_list.end(); ++it)
+	  qualifier_present = (**it == get<QUALIFIER>(log_param));
 
         *m_output_stream << f.produce_trace(log_param);
       }
 
-      void attach_qualifier(log_qualifier &q)
+      void attach_qualifier(qualifier &q)
       {
 	m_qualifier_list.push_back(&q);
       }
@@ -366,10 +389,10 @@ namespace boost {
     static trace_element     trace     = trace_element();
     static eol_element       eol       = eol_element();
 
-    static log_qualifier     log       = log_qualifier("log");
-    static log_qualifier     notice    = log_qualifier("notice");
-    static log_qualifier     warning   = log_qualifier("warning");
-    static log_qualifier     error     = log_qualifier("error");
+    static log_qualifier     log       = log_qualifier();
+    static notice_qualifier  notice    = notice_qualifier();
+    static warning_qualifier warning   = warning_qualifier();
+    static error_qualifier   error     = error_qualifier();
 
 //  Logger class declaration  ------------------------------------------------//
     class logger
@@ -426,11 +449,11 @@ namespace boost {
       inline level_t get_global_max_log_level() 
       { return m_global_max_log_level; }
 
-      void trace(unsigned short       l, 
-                 const log_qualifier &q, 
-                 const std::string   &t, 
-                 const std::string   &f, 
-                 unsigned int        ln)
+      void trace(unsigned short     l, 
+                 const qualifier   &q, 
+                 const std::string &t, 
+                 const std::string &f, 
+                 unsigned int      ln)
       {
 #if defined(BOOST_HAS_THREADS)
         boost::mutex::scoped_lock scoped_lock(m_mutex);
@@ -445,11 +468,11 @@ namespace boost {
         }
       }
       
-      void unformatted_trace(unsigned short       l, 
-			     const log_qualifier &q, 
-			     const std::string   &t, 
-			     const std::string   &f, 
-			     unsigned int        ln);
+      void unformatted_trace(unsigned short     l, 
+			     const qualifier   &q, 
+			     const std::string &t, 
+			     const std::string &f, 
+			     unsigned int      ln);
 
     public:
       std::stringstream       m_string_stream;
@@ -549,11 +572,11 @@ inline boost::logging::element_list_t operator>>(
 }
 
 inline
-void boost::logging::logger::unformatted_trace(unsigned short       l, 
-					       const log_qualifier &q, 
-                                               const std::string   &t, 
-                                               const std::string   &f, 
-                                               unsigned int        ln)
+void boost::logging::logger::unformatted_trace(unsigned short     l, 
+					       const qualifier   &q, 
+                                               const std::string &t, 
+                                               const std::string &f, 
+                                               unsigned int      ln)
 {
 #if defined(BOOST_HAS_THREADS)
   boost::mutex::scoped_lock scoped_lock(m_mutex);
