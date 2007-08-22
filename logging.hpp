@@ -5,8 +5,8 @@
 //  appears in all copies. This software is provided "as is" without express or 
 //  implied warranty, and with no claim as to its suitability for any purpose.
 
-//  See http://www.boost.org for updates, documentation, and revision history.
-//  See http://www.boost.org/libs/logging/ for library home page.
+//  See http://www.boost.org/LICENSE_1_0.txt for licensing.
+//  See http://code.google.com/p/loglite/ for library home page.
 
 #ifndef BOOST_LOGGING_HPP
 #define BOOST_LOGGING_HPP
@@ -70,7 +70,7 @@
 #define BOOST_LOG_( level, _trace )                                            \
   { BOOST_LOG(level, boost::logging::log, _trace) }
 
-#define BOOST_LOG_UNFORMATTED(level, qualifier, _trace)		               \
+#define BOOST_LOG_UNFORMATTED(level, qualifier, _trace)                        \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
@@ -121,10 +121,10 @@ namespace boost {
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
     typedef unsigned short                              level_t;
     typedef tuple<level_t, 
-		  const qualifier &,
-		  std::string, 
-		  std::string, 
-		  unsigned int>                         log_param_t;
+                  const qualifier *,
+                  std::string, 
+                  std::string, 
+                  unsigned int>                         log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format&>                        sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>             sink_format_assoc_list_t;
@@ -139,10 +139,7 @@ namespace boost {
     {
     public:
       qualifier() {}
-
-      inline std::string to_string() const
-      { return m_identifier; }
-      
+      inline std::string to_string() const { return m_identifier; }
       virtual bool operator==(const qualifier &q) { return false; }
     protected:
       std::string m_identifier;
@@ -152,28 +149,32 @@ namespace boost {
     {
     public:
       log_qualifier() { m_identifier = "log"; }
-      bool operator==(const log_qualifier &q) { return true; }
+      bool operator==(const qualifier &q) 
+      { return (dynamic_cast<const log_qualifier *>(&q) != NULL); }
     };
 
     class notice_qualifier : public qualifier
     {
     public:
       notice_qualifier() { m_identifier = "notice"; }
-      bool operator==(const notice_qualifier &q) { return true; }
+      bool operator==(const qualifier &q) 
+      { return (dynamic_cast<const notice_qualifier *>(&q) != NULL); }
     };
 
     class warning_qualifier : public qualifier
     {
     public:
       warning_qualifier() { m_identifier = "warning"; }
-      bool operator==(const warning_qualifier &q) { return true; }
+      bool operator==(const qualifier &q) 
+      { return (dynamic_cast<const warning_qualifier *>(&q) != NULL); }
     };
 
     class error_qualifier : public qualifier
     {
     public:
       error_qualifier() { m_identifier = "error"; }
-      bool operator==(const error_qualifier &q) { return true; }
+      bool operator==(const qualifier &q) 
+      { return (dynamic_cast<const error_qualifier *>(&q) != NULL); }
     };
 
 //  Element classes declaration  ---------------------------------------------//
@@ -361,17 +362,20 @@ namespace boost {
         if (get<LEVEL>(log_param) > m_max_log_level)
           return ;
 
-	qualifier_list_t::const_iterator it = m_qualifier_list.begin();
-	bool qualifier_present = false;
-	for ( ; !qualifier_present && it !=  m_qualifier_list.end(); ++it)
-	  qualifier_present = (**it == get<QUALIFIER>(log_param));
+        qualifier_list_t::const_iterator it = m_qualifier_list.begin();
+        bool qualifier_present = false;
+        for ( ; !qualifier_present && it !=  m_qualifier_list.end(); ++it)
+          qualifier_present = (**it == *get<QUALIFIER>(log_param));
+
+        if (!qualifier_present)
+          return ;
 
         *m_output_stream << f.produce_trace(log_param);
       }
 
       void attach_qualifier(qualifier &q)
       {
-	m_qualifier_list.push_back(&q);
+        m_qualifier_list.push_back(&q);
       }
 
     private:
@@ -443,6 +447,14 @@ namespace boost {
 
       void add_sink(const sink &s, format &f)
       {
+        // Updating global_max_level used for full lazy evaluation
+        m_global_max_log_level = 
+          (m_global_max_log_level < s.get_max_log_level()) 
+          ? 
+            s.get_max_log_level()
+          : 
+            m_global_max_log_level;
+
         m_sink_format_assoc.push_back(sink_format_assoc_t(s, f));
       }
 
@@ -459,7 +471,7 @@ namespace boost {
         boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
-        log_param_t log_param(l, q, t, f, ln);
+        log_param_t log_param(l, &q, t, f, ln);
         sink_format_assoc_list_t::iterator 
           s_it = m_sink_format_assoc.begin();
         for (; s_it != m_sink_format_assoc.end(); ++s_it)
@@ -581,7 +593,7 @@ void boost::logging::logger::unformatted_trace(unsigned short     l,
 #if defined(BOOST_HAS_THREADS)
   boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
-  log_param_t log_param(l, q, t, f, ln);
+  log_param_t log_param(l, &q, t, f, ln);
   sink_format_assoc_list_t::iterator 
     s_it = m_sink_format_assoc.begin();
   for (; s_it != m_sink_format_assoc.end(); ++s_it)
