@@ -11,33 +11,40 @@
 #include <fstream>
 #include <logging.hpp>
 
+using namespace boost::logging;
+
 int main(int argc, char **argv)
 {
-  BOOST_LOG_INIT(("\t<log>" >> boost::logging::eol >>
-      "\t\t<level>" >> boost::logging::level >> "</level>" >> boost::logging::eol >>
-      "\t\t<filename>" >> boost::logging::filename >> "</filename>" >> boost::logging::eol >>
-      "\t\t<line>" >> boost::logging::line >> "</line>" >> boost::logging::eol >>
-      "\t\t<time>" >> boost::logging::time >> "</time>" >> boost::logging::eol >>
-      "\t\t<trace>" >> boost::logging::eol >> "\t\t\t" >>
-        boost::logging::trace >> boost::logging::eol >>
-      "\t\t</trace>" >> boost::logging::eol >>
-    "\t</log>" >> boost::logging::eol))
+  BOOST_LOG_INIT(("\t<log>" >> eol >>
+      "\t\t<level>" >> level >> "</level>" >> eol >>
+      "\t\t<filename>" >> filename >> "</filename>" >> eol >>
+      "\t\t<line>" >> line >> "</line>" >> eol >>
+      "\t\t<time>" >> boost::logging::time >> "</time>" >> eol >>
+      "\t\t<trace>" >> eol >> "\t\t\t" >>
+        trace >> eol >>
+      "\t\t</trace>" >> eol >>
+    "\t</log>" >> eol));
 
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.xml"), 2);
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
+  sink sink_file(new std::ofstream("./output.xml"), 2);
+  sink_file.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
+
+  sink sink_cout(&std::cout, 2);
+  sink_cout.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
 
   boost::gregorian::date d(boost::gregorian::day_clock::local_day());
   std::string date = boost::gregorian::to_iso_extended_string(d);
 
-  BOOST_LOG_UNFORMATTED(1, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl);
-  BOOST_LOG_UNFORMATTED(1, "<log_session date=\"" << date << "\">" << std::endl);
+  BOOST_LOG_UNFORMATTED(1, boost::logging::log, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl);
+  BOOST_LOG_UNFORMATTED(1, boost::logging::log, "<log_session date=\"" << date << "\">" << std::endl);
 
-  BOOST_LOG(1, "Strange women lying in ponds distributing swords");
-  BOOST_LOG(1, "is no basis for a system of government");
-  BOOST_LOG(1, "Supreme executive power derives from a mandate of the masses");
-  BOOST_LOG(1, "not from some farcical aquatic ceremony!");
+  BOOST_LOG_(1, "Strange women lying in ponds distributing swords");
+  BOOST_LOG_(1, "is no basis for a system of government");
+  BOOST_LOG_(1, "Supreme executive power derives from a mandate of the masses");
+  BOOST_LOG_(1, "not from some farcical aquatic ceremony!");
 
-  BOOST_LOG_UNFORMATTED(1, "</log_session>");
+  BOOST_LOG_UNFORMATTED(1, boost::logging::log, "</log_session>");
   
   return 0;
 }

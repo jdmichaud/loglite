@@ -12,6 +12,6 @@
 
 int foo()
 {
-  BOOST_LOG(1, "foo called");
+  BOOST_LOG_(1, "foo called");
   return 0;
 }
