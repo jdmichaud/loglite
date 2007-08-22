@@ -24,10 +24,16 @@ int main(int argc, char **argv)
 		 >> boost::logging::trace
 		 >> boost::logging::eol);
   
-  lgr.add_sink(&std::cout);
-  lgr.add_sink(new std::ofstream("./output.log"));
+  boost::logging::sink sink_cout(&std::cout);
+  boost::logging::sink sink_file(new std::ofstream("./output.log"));
 
-  lgr.trace(1, "something", __FILE__, __LINE__);
-  lgr.trace(1, "something else", __FILE__, __LINE__);
+  sink_cout.attach_qualifier(boost::logging::log);
+  sink_file.attach_qualifier(boost::logging::log);
+
+  lgr.add_sink(sink_cout);
+  lgr.add_sink(sink_file);
+ 
+  lgr.trace(1, boost::logging::log, "something", __FILE__, __LINE__);
+  lgr.trace(1, boost::logging::log, "something else", __FILE__, __LINE__);
   return 0;
 }

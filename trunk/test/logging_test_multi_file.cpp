@@ -15,9 +15,12 @@
 
 int main()
 {
-  BOOST_LOG_INIT((boost::logging::trace >> boost::logging::eol)) // log format
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 1);
-  BOOST_LOG(1, "Multi file test - call to foo:");
+  BOOST_LOG_INIT((boost::logging::trace >> boost::logging::eol)); // log format
+  boost::logging::sink s(&std::cout, 1);
+  s.attach_qualifier(boost::logging::log);
+
+  BOOST_LOG_ADD_OUTPUT_STREAM(s);
+  BOOST_LOG_(1, "Multi file test - call to foo:");
   
   foo();
   return 0;

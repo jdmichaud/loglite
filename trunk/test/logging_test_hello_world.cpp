@@ -14,9 +14,16 @@
 
 int main()
 {
-  BOOST_LOG_INIT( (boost::logging::trace >> boost::logging::eol) ) // log format
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"), 1);
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 1);
-  BOOST_LOG(1, "Hello World!");
+  BOOST_LOG_INIT( (boost::logging::trace >> boost::logging::eol) ); //log format
+   
+  boost::logging::sink sink_cout(&std::cout);
+  boost::logging::sink sink_file(new std::ofstream("./output.log"));
+  sink_cout.attach_qualifier(boost::logging::log);
+  sink_file.attach_qualifier(boost::logging::log);
+  
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
+
+  BOOST_LOG_(1, "Hello World!");
   return 0;
 }

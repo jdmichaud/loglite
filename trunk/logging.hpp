@@ -17,6 +17,7 @@
 #include <ostream>
 #include <sstream>
 #include <stdio.h>
+#include <algorithm>
 #include <exception>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -39,14 +40,14 @@
   l->add_format(format);                                                       \
 }
 
-#define BOOST_LOG_ADD_OUTPUT_STREAM( stream, max_log_level )                   \
+#define BOOST_LOG_ADD_OUTPUT_STREAM( sink )                                    \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
-  l->add_sink(boost::logging::sink(stream, max_log_level));                    \
+  l->add_sink(sink);                                                           \
 }
 
-#define BOOST_LOG(level, _trace)                                               \
+#define BOOST_LOG(level, qualifier, _trace)                                    \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
@@ -57,7 +58,7 @@
                                                                                \
     l->m_string_stream.str("");                                                \
     l->m_string_stream << _trace;                                              \
-    l->trace(level, l->m_string_stream.str(), __FILE__, __LINE__);             \
+    l->trace(level, qualifier, l->m_string_stream.str(), __FILE__, __LINE__);  \
     if (!l->m_string_stack.empty())                                            \
     {                                                                          \
       l->m_string_stream.str(l->m_string_stack.top());                         \
@@ -66,7 +67,10 @@
   }                                                                            \
 }
 
-#define BOOST_LOG_UNFORMATTED(level, _trace)                                   \
+#define BOOST_LOG_( level, _trace )                                            \
+  { BOOST_LOG(level, boost::logging::log, _trace) }
+
+#define BOOST_LOG_UNFORMATTED(level, qualifier, _trace)		               \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
@@ -77,7 +81,8 @@
                                                                                \
     l->m_string_stream.str("");                                                \
     l->m_string_stream << _trace;                                              \
-    l->trace(level, l->m_string_stream.str(), __FILE__, __LINE__);             \
+    l->unformatted_trace(level, qualifier,                                     \
+                         l->m_string_stream.str(), __FILE__, __LINE__);        \
     if (!l->m_string_stack.empty())                                            \
     {                                                                          \
       l->m_string_stream.str(l->m_string_stack.top());                         \
@@ -87,9 +92,10 @@
 }
 #else // !BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )
-#define BOOST_LOG_ADD_OUTPUT_STREAM( stream, max_log_level )
-#define BOOST_LOG(level, _trace)
-#define BOOST_LOG_UNFORMATTED(level, _trace)
+#define BOOST_LOG_ADD_OUTPUT_STREAM( sink )
+#define BOOST_LOG(level, qualifier, _trace)
+#define BOOST_LOG_( level, _trace )
+#define BOOST_LOG_UNFORMATTED(level, qualifier, _trace)
 #endif // BOOST_NO_CODE_GENERATION_FOR_LOG
 
 #define BOOST_MAX_LINE_STR_SIZE 20 // log(2^64)
@@ -102,21 +108,27 @@ namespace boost {
 //  Logging forward declarations ---------------------------------------------//
     class log_element;
     class level_element;
+    class log_qualifier;
     class trace_element;
     class format;
     class sink;
     class logger;
     
 //  Logging typedefs declarations --------------------------------------------//
-    typedef enum { LEVEL = 0, TRACE, FILENAME, LINE }   param_e;
+    typedef enum { LEVEL = 0, QUALIFIER, TRACE, FILENAME, LINE }   param_e;
     typedef enum { SINK = 0, FORMAT }                   sink_format_assoc_e;
     typedef std::list<boost::shared_ptr<log_element> >  element_list_t;
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
     typedef unsigned short                              level_t;
-    typedef tuple<level_t, std::string, std::string, unsigned int> log_param_t;
+    typedef tuple<level_t, 
+		  const log_qualifier &,
+		  std::string, 
+		  std::string, 
+		  unsigned int>                         log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format&>                        sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>             sink_format_assoc_list_t;
+    typedef std::list<log_qualifier *>                  qualifier_list_t;
 
 //  Used for shared_ptr() on statically allocated log_element ----------------//
     struct null_deleter
@@ -321,14 +333,28 @@ namespace boost {
       {
         /* make here check to avoid producing a useless trace */
         if (get<LEVEL>(log_param) > m_max_log_level)
-          return;
+          return ;
+
+	if (std::find
+	      (
+                m_qualifier_list.begin(),
+                m_qualifier_list.end(),
+                &(get<QUALIFIER>(log_param))
+	       ) == m_qualifier_list.end())
+	  return ;
 
         *m_output_stream << f.produce_trace(log_param);
+      }
+
+      void attach_qualifier(log_qualifier &q)
+      {
+	m_qualifier_list.push_back(&q);
       }
 
     private:
       level_t                  m_max_log_level;
       shared_ptr<std::ostream> m_output_stream;
+      qualifier_list_t         m_qualifier_list;      
     };
    
 //  Element static instantiations --------------------------------------------//
@@ -400,16 +426,17 @@ namespace boost {
       inline level_t get_global_max_log_level() 
       { return m_global_max_log_level; }
 
-      void trace(unsigned short     l, 
-                 const std::string &t, 
-                 const std::string &f, 
-                 unsigned int      ln)
+      void trace(unsigned short       l, 
+                 const log_qualifier &q, 
+                 const std::string   &t, 
+                 const std::string   &f, 
+                 unsigned int        ln)
       {
 #if defined(BOOST_HAS_THREADS)
         boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
-        log_param_t log_param(l, t, f, ln);
+        log_param_t log_param(l, q, t, f, ln);
         sink_format_assoc_list_t::iterator 
           s_it = m_sink_format_assoc.begin();
         for (; s_it != m_sink_format_assoc.end(); ++s_it)
@@ -418,10 +445,11 @@ namespace boost {
         }
       }
       
-      void unformatted_trace(unsigned short     l, 
-			     const std::string &t, 
-			     const std::string &f, 
-			     unsigned int      ln);
+      void unformatted_trace(unsigned short       l, 
+			     const log_qualifier &q, 
+			     const std::string   &t, 
+			     const std::string   &f, 
+			     unsigned int        ln);
 
     public:
       std::stringstream       m_string_stream;
@@ -521,15 +549,16 @@ inline boost::logging::element_list_t operator>>(
 }
 
 inline
-void boost::logging::logger::unformatted_trace(unsigned short     l, 
-                                               const std::string &t, 
-                                               const std::string &f, 
-                                               unsigned int      ln)
+void boost::logging::logger::unformatted_trace(unsigned short       l, 
+					       const log_qualifier &q, 
+                                               const std::string   &t, 
+                                               const std::string   &f, 
+                                               unsigned int        ln)
 {
 #if defined(BOOST_HAS_THREADS)
   boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
-  log_param_t log_param(l, t, f, ln);
+  log_param_t log_param(l, q, t, f, ln);
   sink_format_assoc_list_t::iterator 
     s_it = m_sink_format_assoc.begin();
   for (; s_it != m_sink_format_assoc.end(); ++s_it)

@@ -18,7 +18,7 @@ int infinite_loop()
 
 int foo()
 {
-  BOOST_LOG(1, "foo called");
+  BOOST_LOG_(1, "foo called");
   return 7;
 }
 
@@ -29,16 +29,22 @@ int main(int argc, char **argv)
                       >> boost::logging::line >> "),"
                       >> boost::logging::time >> ","
                       >> boost::logging::trace
-                      >> boost::logging::eol)) // log format
+                      >> boost::logging::eol)); // log format
 
 
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"), 2);
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
-  BOOST_LOG(1, "something");
-  BOOST_LOG(2, "something else");
-  BOOST_LOG(3, "If you evaluate me you die!" << infinite_loop());
+  boost::logging::sink s1(new std::ofstream("./output.log"), 2);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
+  s1.attach_qualifier(boost::logging::log);
+
+  boost::logging::sink s2(&std::cout, 2);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s2);
+  s2.attach_qualifier(boost::logging::log);
+
+  BOOST_LOG_(1, "something");
+  BOOST_LOG_(2, "something else");
+  BOOST_LOG_(3, "If you evaluate me you die!" << infinite_loop());
   char you_want[256] = "you want";
-  BOOST_LOG(1, "Let's say " << you_want << " to display " << 2);
-  BOOST_LOG(1, "foo will be evaluated: " << foo());
+  BOOST_LOG_(1, "Let's say " << you_want << " to display " << 2);
+  BOOST_LOG_(1, "foo will be evaluated: " << foo());
   return 0;
 }

@@ -17,7 +17,7 @@ void thread_log_something()
 {
   unsigned int i;
   for (i = 0; i < 20; ++i)
-    BOOST_LOG(1, "loop index: " << i); 
+    BOOST_LOG_(1, "loop index: " << i); 
 }
 
 int main(int argc, char **argv)
@@ -27,10 +27,15 @@ int main(int argc, char **argv)
                       >> boost::logging::line >> "),"
                       >> boost::logging::time >> ","
                       >> boost::logging::trace
-                      >> boost::logging::eol))
+                      >> boost::logging::eol));
 
-  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"), 2);
-  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout, 2);
+  boost::logging::sink sink_file(new std::ofstream("./output.log"), 2);
+  sink_file.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
+
+  boost::logging::sink sink_cout(&std::cout, 2);
+  sink_cout.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
 
   boost::thread_group thrd;
   unsigned int i;
