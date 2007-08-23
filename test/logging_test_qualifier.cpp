@@ -57,7 +57,7 @@ int main(int argc, char **argv)
   BOOST_LOG(1, bl::log, "Application starting");
   BOOST_LOG(1, bl::notice, "Application version 1.0.3 - Copyright(2007) World Company");
 
-  do_something();
+  BOOST_LOG(1, bl::log, "do_something returned: " << do_something());
   overheat(87);
   return 0;
 }
