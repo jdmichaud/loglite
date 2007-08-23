@@ -6,6 +6,7 @@ SRC	= ../test/logging_test.cpp		\
 	../test/logging_test_hello_world.cpp	\
 	../test/logging_test_macro.cpp		\
 	../test/logging_test_multithread.cpp	\
+	../test/logging_test_qualifier.cpp	\
 	../test/logging_test_xml_output.cpp
 SRC2	= ../test/logging_test_multi_file.cpp	\
 	../test/logging_test_multi_file2.cpp
