@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <title>Boost.Logging: Index</title>
+    <meta name="generator" content="HTML Tidy, see www.w3.org">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href="../../../boost.css">
+  </head>
+  <body>
+    <p></p>
+    <table id="Table1" cellspacing="1" cellpadding="1" width="100%" border="0">
+      <tr>
+        <td valign="top" width="300">
+          <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+        </td>
+        <td width="353">
+          <h1 align="center">Boost.Logging</h1>
+          <h2 align="center">Tutorial</h2>
+        </td>
+        <td width="50">
+          <h3><a href="index.html"><img height="45" width="43" alt="Boost Libraries Index" src="uarrow.gif" border="0"></a></h3>
+        </td>
+      </tr>
+    </table>
+    <hr>
+    <h2>Tutorial</h2>
+    First, we assume boost is installed and compiled correctly, as descriped 
+    <a href="../../../more/getting_started.html#Build_Install">there</a>. Boost.Date_Time, 
+    Boost.Shared_Ptr and eventually Boost.Thread must be compiled. 
+    <br>
+    <h3><a name="hello_world"></a>Hello World</h3>
+    Here is the Hello World! example:
+    
+    <pre>
+#include &lt;fstream&gt;
+#include &lt;boost/logging.hpp&gt;
+
+int main()
+{
+  <B>BOOST_LOG_INIT</B>((boost::logging::trace >> boost::logging::eol), // log format
+                   1);                                                  // log level
+
+  <B>BOOST_LOG_ADD_OUTPUT_STREAM</B>(new std::ofstream("./output.log"));
+  <B>BOOST_LOG_ADD_OUTPUT_STREAM</B>(&std::cout);
+
+  <B>BOOST_LOG</B>(1, "Hello World!");
+  return 0;
+}
+    </pre>
+    &nbsp;&nbsp;The macro <b>BOOST_INIT_LOG</b> initializes the logguer object which is a static
+    member used as a singleton. This is a limitation of Boost.Logging. Only one
+    object can be used for logging through a program, but this is the cost of
+    simplicity. It will allow us to use the macro <b>BOOST_LOG</b> anywhere in our
+    source code to trace effortlessly.
+    
+    <br>
+    <br>
+    &nbsp;&nbsp;&nbsp;- The first argument of <b>BOOST_INIT_LOG</b> is the format used to
+    produce the log. This format is defined using element of log. Basically here, it tells the logguer to first display the message
+    of the log (what we call the <i>trace</i>) and then append an end-of-line. You
+    can refere to this <a href="reference.html#element"> page</a> for a complete reference of log elements.
+    
+    <br>
+    &nbsp;&nbsp;&nbsp;- The second argument specify the maximum log level allowed. The log
+    level is an integer used by the user to specify a hierarchy between the log. It
+    is accessed in the format by boost::logging::level and is displayed as an integer
+    in the logs. The maximum log level is used to limit log production. If the maximum
+    log level is set to 2 and you try to output a log of level 3, it will just be ignored.
+        
+    <br>
+    &nbsp;&nbsp;&nbsp;- The third argument is the list of output streams that will receive
+    the logs. <i>boost::logging::stream_list_t</i> is a <i>std::list&lt;std::ostream&gt;</i>.
+    
+    <br>
+    <br>
+    &nbsp;&nbsp;The macro <b>BOOST_LOG</b> is used to trace. It can be used anywhere
+    as soon as <b>BOOST_INIT_LOG</b> is called and wherever you include logging.hpp.
+    
+    <br>
+    &nbsp;&nbsp;&nbsp;- The first argument specifies the log level.
+    <br>
+    &nbsp;&nbsp;&nbsp;- The second argument specifies the trace itself. This trace can be
+    a stream of strings and so can easily be used to trace anything that can be inserted
+    into a <i>std::stringstream</i>.
+
+    <h3><a name="example1"></a>A real trace</h3>
+    <pre>
+#include &lt;fstream&gt;
+#include &lt;boost/logging.hpp&gt;
+
+int main(int argc, char **argv)
+{
+  BOOST_INIT_LOG(("[" &gt;&gt; boost::logging::level &gt;&gt; "],"
+                      &gt;&gt; boost::logging::filename &gt;&gt; "("
+                      &gt;&gt; boost::logging::line &gt;&gt; "),"
+                      &gt;&gt; boost::logging::time &gt;&gt; ","
+                      &gt;&gt; boost::logging::trace
+                      &gt;&gt; boost::logging::eol), // log format
+                      2);                      // log level
+
+  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout);
+  BOOST_LOG(1, "something");
+  BOOST_LOG(2, "something else");
+  BOOST_LOG(3, "doesn't matter");
+  char you_want[256] = "you want";
+  BOOST_LOG(1, "Let's say " &lt;&lt; you_want &lt;&lt; " to display " &lt;&lt; 2);
+  return 0;
+}
+    </pre>
+    Output is:
+    <pre>
+[1],c:\program files\boost_1_33_1\libs\logging\test\logging_test_macro.cpp(20),2007-Mar-28 15:35:03.750387,something
+[2],c:\program files\boost_1_33_1\libs\logging\test\logging_test_macro.cpp(21),2007-Mar-28 15:35:03.750387,something else
+[1],c:\program files\boost_1_33_1\libs\logging\test\logging_test_macro.cpp(24),2007-Mar-28 15:35:03.766012,Let's say you want to display 2    
+    </pre>
+    
+    <br>
+    <h3><a name="example2"></a>Produce XML</h3>
+    <pre>
+#include &lt;boost/bind.hpp&gt;
+#include &lt;fstream&gt;
+#include &lt;boost/logging.hpp&gt;
+
+int main(int argc, char **argv)
+{
+  BOOST_LOG_INIT(("\t&lt;log&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;level&gt;" &gt;&gt; boost::logging::level &gt;&gt; "&lt;/level&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;filename&gt;" &gt;&gt; boost::logging::filename &gt;&gt; "&lt;/filename&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;line&gt;" &gt;&gt; boost::logging::line &gt;&gt; "&lt;/line&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;time&gt;" &gt;&gt; boost::logging::time &gt;&gt; "&lt;/time&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;trace&gt;" &gt;&gt; boost::logging::eol &gt;&gt; "\t\t\t" &gt;&gt;
+        boost::logging::trace &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;/trace&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+    "\t&lt;/log&gt;" &gt;&gt; boost::logging::eol),
+    2); // Max log level
+  
+  BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.xml"));
+  BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout);
+
+  boost::gregorian::date d(boost::gregorian::day_clock::local_day());
+  std::string date = boost::gregorian::to_iso_extended_string(d);
+
+  BOOST_LOG_UNFORMATTED(1, "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;" &lt;&lt; std::endl);
+  BOOST_LOG_UNFORMATTED(1, "&lt;log_session date=\"" &lt;&lt; date &lt;&lt; "\"&gt;" &lt;&lt; std::endl);
+
+  BOOST_LOG(1, "Strange women lying in ponds distributing swords");
+  BOOST_LOG(1, "is no basis for a system of government");
+  BOOST_LOG(1, "Supreme executive power derives from a mandate of the masses");
+  BOOST_LOG(1, "not from some farcical aquatic ceremony!");
+
+  BOOST_LOG_UNFORMATTED(1, "&lt;/log_session&gt;");
+  
+  return 0;
+}
+    
+    </pre>
+    Output:
+    <pre>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;log_session date="2007-03-31"&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;27&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.655552&lt;/time&gt;
+		&lt;trace&gt;
+			Strange women lying in ponds distributing swords
+		&lt;/trace&gt;
+	&lt;/log&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;28&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.655552&lt;/time&gt;
+		&lt;trace&gt;
+			is no basis for a system of government
+		&lt;/trace&gt;
+	&lt;/log&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;29&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.665566&lt;/time&gt;
+		&lt;trace&gt;
+			Supreme executive power derives from a mandate of the masses
+		&lt;/trace&gt;
+	&lt;/log&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;30&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.665566&lt;/time&gt;
+		&lt;trace&gt;
+			not from some farcical aquatic ceremony!
+		&lt;/trace&gt;
+	&lt;/log&gt;
+&lt;/log_session&gt;    
+    </pre>
+
+    <hr>
+    <p>Revised 
+       <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+       31&nbsp;March 2007&nbsp; 
+       <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+    <p><i>© Copyright Jean-Daniel Michaud&nbsp;2007
+    <P><I>Use, modification and distribution are subject to the Boost Software License, 
+          Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+          or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+  </body>
+</html>
