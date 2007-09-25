@@ -26,6 +26,8 @@ int main(int argc, char **argv)
   out->push(boost::iostreams::gzip_compressor());
   out->push(boost::iostreams::file_sink("log.gz"));
 
+  *out << "this is a test" << std::endl;
+
   //boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf("log.txt");
 
   //sink sink_file(new std::ostream(&buf), 2);
