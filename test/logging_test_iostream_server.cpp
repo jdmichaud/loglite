@@ -10,32 +10,50 @@
 
 #include <ostream>
 #include <fstream>
-#include <logging.hpp>
+#include <queue>
+#include <string>
+
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/condition.hpp>
+#include <boost/bind.hpp>
+#include <boost/ref.hpp>
 
 using boost::asio::ip::tcp;
-using namespace boost::logging;
+
+boost::mutex            m;
+std::ofstream           out("log.txt");
+
+void push_trace(const std::string &t)
+{
+  boost::mutex::scoped_lock scoped_lock(m);
+  out << t << std::flush;
+}
+
+void accept(tcp::acceptor &acceptor)
+{
+  tcp::iostream stream;
+  acceptor.accept(*stream.rdbuf());
+  boost::thread thrd(boost::bind(&accept, boost::ref(acceptor)));
+  
+  std::string line;
+  boost::thread_group thrd_group;
+  while (std::getline(stream, line, '\f'))
+    thrd_group.create_thread(boost::bind(&push_trace, line));
+  
+  thrd_group.join_all();
+  thrd.join();
+}
 
 int main(int argc, char **argv)
 {
   boost::asio::io_service io_service;
 
-  tcp::endpoint endpoint(tcp::v4(), 13);
+  tcp::endpoint endpoint(tcp::v4(), 16013);
   tcp::acceptor acceptor(io_service, endpoint);
 
-  for (;;)
-  {
-    tcp::iostream stream;
-    acceptor.accept(*stream.rdbuf());
-    while (!stream.eof())
-    {
-      char c;
-      stream.get(c);
-      if (!stream.eof())
-        std::cout << c;
-    }
-  }
-
+  boost::thread thrd(boost::bind(&accept, boost::ref(acceptor)));
+  thrd.join();
   return 0;
 }
 

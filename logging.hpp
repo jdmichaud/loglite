@@ -252,7 +252,7 @@ namespace boost {
     class literal_element : public log_element
     {
     public:
-      explicit literal_element(const std::string &l) : m_literal(l) {}
+      explicit literal_element(std::string l) : m_literal(l) {}
       std::string to_string() { return m_literal; };
     private:
       std::string m_literal;
@@ -268,6 +268,12 @@ namespace boost {
       std::string to_string() { return m_qualifier_identifier; };
     private:
       std::string m_qualifier_identifier;
+    };
+
+    class eot_element : public log_element
+    {
+    public:
+      std::string to_string() { return "\f"; };
     };
 
 //  Format class declatation -------------------------------------------------//
@@ -392,6 +398,7 @@ namespace boost {
     static time_element      time      = time_element();
     static trace_element     trace     = trace_element();
     static eol_element       eol       = eol_element();
+    static eot_element       eot       = eot_element();
 
     static log_qualifier     log       = log_qualifier();
     static notice_qualifier  notice    = notice_qualifier();
