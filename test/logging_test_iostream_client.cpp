@@ -1,4 +1,4 @@
-//  Boost general library logging_test_iostream_client.cpp file  ------------//
+//  Boost general library logging_test_iostream_client.cpp file  -------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
