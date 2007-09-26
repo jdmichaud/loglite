@@ -28,9 +28,6 @@ int main(int argc, char **argv)
 
   *out << "this is a test" << std::endl;
 
-  //boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf("log.txt");
-
-  //sink sink_file(new std::ostream(&buf), 2);
   sink sink_file(out, 2);
   sink_file.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
