@@ -23,11 +23,14 @@ using boost::asio::ip::tcp;
 
 boost::mutex            m;
 std::ofstream           out("log.txt");
+int nbthread = 0;
 
 void push_trace(const std::string &t)
 {
+  std::cout << "thread created. # of threads: " << ++nbthread << std::endl;
   boost::mutex::scoped_lock scoped_lock(m);
-  out << t << std::flush;
+  out << t;
+  --nbthread;
 }
 
 void accept(tcp::acceptor &acceptor)
@@ -40,7 +43,7 @@ void accept(tcp::acceptor &acceptor)
   boost::thread_group thrd_group;
   while (std::getline(stream, line, '\f'))
     thrd_group.create_thread(boost::bind(&push_trace, line));
-  
+
   thrd_group.join_all();
   thrd.join();
 }
