@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="test_iostream_shmem"
 	ProjectGUID="{640F8264-CB9E-4AF9-BE87-78AEB8223F3D}"
 	RootNamespace="test"
@@ -256,6 +256,10 @@
 			>
 			<File
 				RelativePath="..\test\logging_test_iostream_shmem.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\Program Files\boost-cvs\boost\libs\iostreams\src\mapped_file.cpp"
 				>
 			</File>
 		</Filter>

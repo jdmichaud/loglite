@@ -30,15 +30,14 @@ void server_thread(const std::string &mem_file_name)
       boost::xtime xt;
       boost::xtime_get(&xt, boost::TIME_UTC);
       xt.sec += 1;
-      boost::thread::sleep(xt); // Sleep
+      boost::thread::sleep(xt);
 
-      boost::iostreams::stream_buffer
+      boost::iostreams::stream
         <
           boost::iostreams::mapped_file_source
-        > buf(mem_file_name);
+        > in(mem_file_name);
 
       done = true;
-      std::istream in(&buf);
 
       std::string line;
       while (std::getline(in, line, '\f'))
@@ -50,9 +49,8 @@ void server_thread(const std::string &mem_file_name)
 
 int main(int argc, char **argv)
 {
-  std::string memory_file_name("boost.logging.shared.memory.segment");
+  std::string memory_file_name("segment");
   boost::thread thrd(boost::bind(&server_thread, memory_file_name));
-  int i = 0;
 
   BOOST_LOG_INIT(filename >> (*new literal_element("("))
                           >> line >> "),"
@@ -63,12 +61,13 @@ int main(int argc, char **argv)
 
   try
   { 
-    boost::iostreams::stream_buffer
-      <
-        boost::iostreams::mapped_file_sink
-      > buf;
-    buf.open(boost::iostreams::mapped_file_sink(memory_file_name));
-    std::ostream *out = new std::ostream(&buf);
+    boost::iostreams::stream <boost::iostreams::mapped_file_sink> 
+      *out  = new boost::iostreams::stream <boost::iostreams::mapped_file_sink>();
+
+    boost::iostreams::mapped_file_params p(memory_file_name);
+    p.new_file_size = 1024 * sizeof (char);
+    
+    out->open(boost::iostreams::mapped_file_sink(p));
 
     sink sink_file(out, 2);
     sink_file.attach_qualifier(boost::logging::log);
@@ -78,12 +77,14 @@ int main(int argc, char **argv)
     BOOST_LOG_(1, "is no basis for a system of government");
     BOOST_LOG_(1, "Supreme executive power derives from a mandate of the masses");
     BOOST_LOG_(1, "not from some farcical aquatic ceremony!");
+
+    out->close();
+    thrd.join();
   }
   catch (std::exception& e)
   {
     std::cout << "Exception: " << e.what() << std::endl;
-    i = GetLastError();
   }
-
+ 
   return 0;
 }
