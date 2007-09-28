@@ -12,16 +12,20 @@ SRC2	= ../test/logging_test_multi_file.cpp	\
 	../test/logging_test_multi_file2.cpp
 SRC3	= ../test/logging_test_iostream.cpp	\
 	../test/zlib.cpp
+SRC4	= ../test/logging_test_iostream_shmem.cpp \
+	../test/mapped_file.cpp
 CLIENT	= ../test/logging_test_iostream_client.cpp
 SERVER	= ../test/logging_test_iostream_server.cpp
 OBJ	= $(SRC:.cpp=.o)
 EXE	= $(SRC:.cpp=)
 OBJ2	= $(SRC2:.cpp=.o)
 OBJ3	= $(SRC3:.cpp=.o)
+OBJ4	= $(SRC4:.cpp=.o)
 CLOBJ	= $(CLIENT:.cpp=.o)
 SRVOBJ	= $(SERVER:.cpp=.o)
 EXE2	= ../test/logging_test_multi_file
 EXE3	= ../test/logging_test_iostream
+EXE4	= ../test/logging_test_iostream_shmem
 CLEXE	= ../test/logging_test_iostream_client
 SRVEXE	= ../test/logging_test_iostream_server
 INCLUDE	= -I../ -I../test -I$(BOOST)
@@ -32,7 +36,7 @@ LIBS	= -static -L$(BOOST)/stage/lib		\
 	-pthread -lz
 CFLAGS	= -c -Wfatal-errors -ggdb3 $(INCLUDE)
 
-all: $(EXE) $(EXE2) $(EXE3) $(CLEXE) $(SRVEXE)
+all: $(EXE) $(EXE2) $(EXE3) $(CLEXE) $(SRVEXE) $(EXE4)
 
 .o:
 	$(CC) -o $@ $? $(LDFLAGS) $(LIBS)
@@ -50,6 +54,12 @@ $(EXE3): $(OBJ3)
 	$(CC) $(OBJ3) $(LDFLAGS) $(LIBS) -o $@
 
 $(OBJ3): $(SRC3)
+	$(CC) $(CFLAGS) $*.cpp -o $@
+
+$(EXE4): $(OBJ4)
+	$(CC) $(OBJ4) $(LDFLAGS) $(LIBS) -o $@
+
+$(OBJ4): $(SRC4)
 	$(CC) $(CFLAGS) $*.cpp -o $@
 
 $(CLEXE): $(CLOBJ)
