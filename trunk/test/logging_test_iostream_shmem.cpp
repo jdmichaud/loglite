@@ -20,18 +20,13 @@ using namespace boost::logging;
 
 void server_thread(const std::string &mem_file_name)
 {
-  std::ofstream out("log.txt");
+  std::ofstream out("log.txt", std::ios::app);
   bool done = false;
 
   while (!done)
   {
     try
     {
-      boost::xtime xt;
-      boost::xtime_get(&xt, boost::TIME_UTC);
-      xt.sec += 1;
-      boost::thread::sleep(xt);
-
       boost::iostreams::stream
         <
           boost::iostreams::mapped_file_source
@@ -41,15 +36,23 @@ void server_thread(const std::string &mem_file_name)
 
       std::string line;
       while (std::getline(in, line, '\f'))
-        out << line;
+        if (!in.eof() && !in.fail() && !in.bad())
+          out << line;
     }
-    catch (const std::exception &e) {}
+    catch (const std::exception &e) 
+    {
+      std::cerr << e.what() << std::endl;
+      boost::xtime xt;
+      boost::xtime_get(&xt, boost::TIME_UTC);
+      xt.sec += 1;
+      boost::thread::sleep(xt); // Sleep      
+    }
   }
 }
 
 int main(int argc, char **argv)
 {
-  std::string memory_file_name("segment");
+  std::string memory_file_name("boost.logging.shared.memory.segment");
   boost::thread thrd(boost::bind(&server_thread, memory_file_name));
 
   BOOST_LOG_INIT(filename >> (*new literal_element("("))
@@ -73,10 +76,8 @@ int main(int argc, char **argv)
     sink_file.attach_qualifier(boost::logging::log);
     BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
 
-    BOOST_LOG_(1, "Strange women lying in ponds distributing swords");
-    BOOST_LOG_(1, "is no basis for a system of government");
-    BOOST_LOG_(1, "Supreme executive power derives from a mandate of the masses");
-    BOOST_LOG_(1, "not from some farcical aquatic ceremony!");
+    BOOST_LOG_(1, "This test the shared memory streaming");
+    BOOST_LOG_(1, "Now you can log from a process and dump the log to a file from another process");
 
     out->close();
     thrd.join();
