@@ -21,6 +21,9 @@
 #include <exception>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/once.hpp>
+#include <boost/ref.hpp>
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
 #endif
@@ -47,18 +50,18 @@
   l->add_sink(sink);                                                           \
 }
 
-#define BOOST_LOG(level, qualifier, _trace)                                    \
+#define BOOST_LOG(mask, qualifier, _trace)                                     \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
-  if (l->get_global_max_log_level() >= level)                                  \
+  if (l->get_global_log_mask() & mask)                                         \
   {                                                                            \
     if (l->m_string_stream.str() != "")                                        \
       l->m_string_stack.push(l->m_string_stream.str());                        \
                                                                                \
     l->m_string_stream.str("");                                                \
     l->m_string_stream << _trace;                                              \
-    l->trace(level, qualifier, l->m_string_stream.str(), __FILE__, __LINE__);  \
+    l->trace(mask, qualifier, l->m_string_stream.str(), __FILE__, __LINE__);   \
     if (!l->m_string_stack.empty())                                            \
     {                                                                          \
       l->m_string_stream.str(l->m_string_stack.top());                         \
@@ -67,21 +70,21 @@
   }                                                                            \
 }
 
-#define BOOST_LOG_( level, _trace )                                            \
-  { BOOST_LOG(level, boost::logging::log, _trace) }
+#define BOOST_LOG_( mask, _trace )                                             \
+  { BOOST_LOG(mask, boost::logging::log, _trace) }
 
-#define BOOST_LOG_UNFORMATTED(level, qualifier, _trace)                        \
+#define BOOST_LOG_UNFORMATTED(mask, qualifier, _trace)                        \
 {                                                                              \
   boost::logging::logger *l = boost::logging::logger::get_instance();          \
   assert(l);                                                                   \
-  if (l->get_global_max_log_level() >= level)                                  \
+  if (l->get_global_log_mask() & mask)                                         \
   {                                                                            \
     if (l->m_string_stream.str() != "")                                        \
       l->m_string_stack.push(l->m_string_stream.str());                        \
                                                                                \
     l->m_string_stream.str("");                                                \
     l->m_string_stream << _trace;                                              \
-    l->unformatted_trace(level, qualifier,                                     \
+    l->unformatted_trace(mask, qualifier,                                      \
                          l->m_string_stream.str(), __FILE__, __LINE__);        \
     if (!l->m_string_stack.empty())                                            \
     {                                                                          \
@@ -93,13 +96,26 @@
 #else // !BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )
 #define BOOST_LOG_ADD_OUTPUT_STREAM( sink )
-#define BOOST_LOG(level, qualifier, _trace)
-#define BOOST_LOG_( level, _trace )
-#define BOOST_LOG_UNFORMATTED(level, qualifier, _trace)
+#define BOOST_LOG(mask, qualifier, _trace)
+#define BOOST_LOG_( mask, _trace )
+#define BOOST_LOG_UNFORMATTED(mask, qualifier, _trace)
 #endif // BOOST_NO_CODE_GENERATION_FOR_LOG
 
-#define BOOST_MAX_LINE_STR_SIZE 20 // log(2^64)
-#define BOOST_LEVEL_UP_LIMIT    999
+#define BOOST_LOG_MAX_LINE_STR_SIZE       20 // log(2^64)
+#define BOOST_LOG_MASK_UP_LIMIT           65535 // 2^sizeof (mask_t) - 1
+#define BOOST_LOG_MASK_LEVEL_1            1     // 0001
+#define BOOST_LOG_MASK_LEVEL_2            3     // 0011
+#define BOOST_LOG_MASK_LEVEL_3            7     // 0111
+#define BOOST_LOG_MASK_LEVEL_4            15    // 1111
+#define BOOST_LOG_LEVEL_1                 1
+#define BOOST_LOG_LEVEL_2                 2
+#define BOOST_LOG_LEVEL_3                 4
+#define BOOST_LOG_LEVEL_4                 8
+
+#define BOOST_LOG_L1( _trace )  BOOST_LOG_( BOOST_LOG_LEVEL_1, _trace )
+#define BOOST_LOG_L2( _trace )  BOOST_LOG_( BOOST_LOG_LEVEL_2, _trace )
+#define BOOST_LOG_L3( _trace )  BOOST_LOG_( BOOST_LOG_LEVEL_3, _trace )
+#define BOOST_LOG_L4( _trace )  BOOST_LOG_( BOOST_LOG_LEVEL_4, _trace )
 
 namespace boost {
 
@@ -107,7 +123,7 @@ namespace boost {
 
 //  Logging forward declarations ---------------------------------------------//
     class log_element;
-    class level_element;
+    class mask_element;
     class qualifier;
     class trace_element;
     class format;
@@ -115,12 +131,12 @@ namespace boost {
     class logger;
     
 //  Logging typedefs declarations --------------------------------------------//
-    typedef enum { LEVEL = 0, QUALIFIER, TRACE, FILENAME, LINE }   param_e;
+    typedef enum { MASK = 0, QUALIFIER, TRACE, FILENAME, LINE }   param_e;
     typedef enum { SINK = 0, FORMAT }                   sink_format_assoc_e;
     typedef std::list<boost::shared_ptr<log_element> >  element_list_t;
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
-    typedef unsigned short                              level_t;
-    typedef tuple<level_t, 
+    typedef unsigned short                              mask_t;
+    typedef tuple<mask_t, 
                   const qualifier *,
                   std::string, 
                   std::string, 
@@ -186,10 +202,10 @@ namespace boost {
       virtual std::string visit(format &f, const log_param_t &log_param);
     };
     
-    class level_element : public log_element
+    class mask_element : public log_element
     {
     public:
-      std::string to_string(level_t l) 
+      std::string to_string(mask_t l) 
       { 
         return str(boost::format("%i") % l);
       };
@@ -306,7 +322,7 @@ namespace boost {
         std::stringstream str_stream;
         for (; e_it != m_element_list.end(); ++e_it)
         {
-	  str_stream << (*e_it)->visit(*this, log_param);
+          str_stream << (*e_it)->visit(*this, log_param);
         }
 
         return str_stream.str();
@@ -317,7 +333,7 @@ namespace boost {
       {
 	      return e.to_string();
       }
-      std::string accept(level_element &e, level_t l)
+      std::string accept(mask_element &e, mask_t l)
       {
 	      return e.to_string(l);
       }
@@ -343,7 +359,7 @@ namespace boost {
     class sink
     {
     public:
-      sink(std::ostream *s, level_t max_log_level = 1)
+      sink(std::ostream *s, mask_t log_mask = 1)
       {
         if (s)
           if (*s == std::cout || *s == std::cerr || *s == std::clog)
@@ -351,21 +367,21 @@ namespace boost {
           else
             m_output_stream.reset(s);
 
-        set_max_log_level(max_log_level);
+        set_log_mask(log_mask);
       }
 
-      void set_max_log_level(level_t max_log_level)
+      void set_log_mask(mask_t log_mask)
       { 
-        m_max_log_level = ((BOOST_LEVEL_UP_LIMIT < max_log_level) 
-          ? BOOST_LEVEL_UP_LIMIT : max_log_level);
+        m_log_mask = ((BOOST_LOG_MASK_UP_LIMIT < log_mask) 
+          ? BOOST_LOG_MASK_UP_LIMIT : log_mask);
       }
 
-      inline level_t get_max_log_level() const { return m_max_log_level; }
+      inline mask_t get_log_mask() const { return m_log_mask; }
 
       void consume_trace(format &f, const log_param_t &log_param)
       {
         /* make here check to avoid producing a useless trace */
-        if (get<LEVEL>(log_param) > m_max_log_level)
+        if (get<MASK>(log_param) > m_log_mask)
           return ;
 
         qualifier_list_t::const_iterator it = m_qualifier_list.begin();
@@ -385,13 +401,13 @@ namespace boost {
       }
 
     private:
-      level_t                  m_max_log_level;
+      mask_t                   m_log_mask;
       shared_ptr<std::ostream> m_output_stream;
       qualifier_list_t         m_qualifier_list;      
     };
    
 //  Element static instantiations --------------------------------------------//
-    static level_element     level     = level_element();
+    static mask_element      mask      = mask_element();
     static filename_element  filename  = filename_element();
     static line_element      line      = line_element();
     static date_element      date      = date_element();
@@ -409,8 +425,31 @@ namespace boost {
     class logger
     {
     public: 
-      logger() : m_global_max_log_level(0) {}
+      logger() : m_global_log_mask(0) {}
         
+      /* crashes msvc-8.0 !!
+      void create_instance(logger *l)
+      {
+        static logger             *_l = NULL;
+
+        if (!_l)
+        {
+          _l = new logger();
+          static shared_ptr<logger> s_ptr_l(_l);
+        }
+
+        l = _l;
+      }
+
+      static logger *get_instance()
+      {
+        logger                    *l;
+        static boost::once_flag   once = BOOST_ONCE_INIT;
+        boost::call_once(boost::bind(&logger::create_instance, boost::ref(l)), once);
+        return l;
+      }
+      */
+
       static logger *get_instance()
       {
 #if defined(BOOST_HAS_THREADS)
@@ -418,15 +457,16 @@ namespace boost {
         boost::mutex::scoped_lock scoped_lock(m_inst_mutex);
 #endif // BOOST_HAS_THREADS
         static logger             *l = NULL;
-        
+
         if (!l)
         {
           l = new logger();
           static shared_ptr<logger> s_ptr_l(l);
         }
-          
+
         return l;
       }
+
 
       void add_format(const format &f)
       {
@@ -438,13 +478,8 @@ namespace boost {
         if (m_format_list.begin() == m_format_list.end())
           throw "no format defined";
 
-        // Updating global_max_level used for full lazy evaluation
-        m_global_max_log_level = 
-          (m_global_max_log_level < s.get_max_log_level()) 
-          ? 
-            s.get_max_log_level()
-          : 
-            m_global_max_log_level;
+        // Updating global_mask used for full lazy evaluation
+        m_global_log_mask |= s.get_log_mask();
 
         m_sink_format_assoc.push_back
           (
@@ -454,19 +489,14 @@ namespace boost {
 
       void add_sink(const sink &s, format &f)
       {
-        // Updating global_max_level used for full lazy evaluation
-        m_global_max_log_level = 
-          (m_global_max_log_level < s.get_max_log_level()) 
-          ? 
-            s.get_max_log_level()
-          : 
-            m_global_max_log_level;
+        // Updating global_mask used for full lazy evaluation
+        m_global_log_mask |= s.get_log_mask();
 
         m_sink_format_assoc.push_back(sink_format_assoc_t(s, f));
       }
 
-      inline level_t get_global_max_log_level() 
-      { return m_global_max_log_level; }
+      inline mask_t get_global_log_mask() 
+      { return m_global_log_mask; }
 
       void trace(unsigned short     l, 
                  const qualifier   &q, 
@@ -501,10 +531,10 @@ namespace boost {
       format_list_t            m_format_list;
       sink_format_assoc_list_t m_sink_format_assoc;
 
-      // The global max log level is the highest log level on all the link
-      // added to the logger. If no sink as a log level high enougth for
-      // a trace, the trace does not need to be evaluated.
-      level_t                  m_global_max_log_level;
+      // The global log mask is the highest log mask on all the sink
+      // added to the logger. If no sink as a log mask matching the global
+      // mask for a trace, the trace does not need to be evaluated.
+      mask_t                  m_global_log_mask;
 #if defined(BOOST_HAS_THREADS)
       boost::mutex             m_mutex;
 #endif // BOOST_HAS_THREADS
@@ -517,10 +547,10 @@ namespace boost {
       return f.accept(*this);
     }
 
-    inline std::string level_element::visit(format &f, 
-                                            const log_param_t &log_param)
+    inline std::string mask_element::visit(format &f, 
+                                           const log_param_t &log_param)
     {
-      return f.accept(*this, get<LEVEL>(log_param));
+      return f.accept(*this, get<MASK>(log_param));
     }
 
     inline std::string trace_element::visit(format &f, 

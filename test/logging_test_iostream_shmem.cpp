@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     
     out->open(boost::iostreams::mapped_file_sink(p));
 
-    sink sink_file(out, 2);
+    sink sink_file(out, BOOST_LOG_MASK_LEVEL_2);
     sink_file.attach_qualifier(boost::logging::log);
     BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
 

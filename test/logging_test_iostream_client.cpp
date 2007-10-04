@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   }
 
   BOOST_LOG_INIT(((*new boost::logging::literal_element(argv[2])) >> (*new boost::logging::literal_element(" - ")) 
-                   >> (*new boost::logging::literal_element("[")) >> boost::logging::level >> "],"
+                   >> (*new boost::logging::literal_element("[")) >> boost::logging::mask >> "],"
                    >> boost::logging::filename >> "("
                    >> boost::logging::line >> "),"
                    >> boost::logging::time >> ","
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
   try
   {
-    sink sink_network(new tcp::iostream(argv[1], "16013"), 2);
+    sink sink_network(new tcp::iostream(argv[1], "16013"), BOOST_LOG_MASK_LEVEL_2);
     sink_network.attach_qualifier(boost::logging::log);
     BOOST_LOG_ADD_OUTPUT_STREAM(sink_network);
 
