@@ -13,6 +13,7 @@
 
 int infinite_loop()
 {
+  BOOST_LOG_L1("oops...");
   while (1) ;
 }
 
@@ -24,7 +25,7 @@ int foo()
 
 int main(int argc, char **argv)
 {
-  BOOST_LOG_INIT(("[" >> boost::logging::level >> "],"
+  BOOST_LOG_INIT(("[" >> boost::logging::mask >> "],"
                       >> boost::logging::filename >> "("
                       >> boost::logging::line >> "),"
                       >> boost::logging::time >> ","
@@ -32,19 +33,19 @@ int main(int argc, char **argv)
                       >> boost::logging::eol)); // log format
 
 
-  boost::logging::sink s1(new std::ofstream("./output.log"), 2);
+  boost::logging::sink s1(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_2);
   s1.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(s1);
 
-  boost::logging::sink s2(&std::cout, 2);
+  boost::logging::sink s2(&std::cout, BOOST_LOG_MASK_LEVEL_2);
   s2.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(s2);
 
-  BOOST_LOG_(1, "something");
-  BOOST_LOG_(2, "something else");
-  BOOST_LOG_(3, "If you evaluate me you die!" << infinite_loop());
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "something");
+  BOOST_LOG_(BOOST_LOG_LEVEL_2, "something else");
+  BOOST_LOG_(BOOST_LOG_LEVEL_3, "If you evaluate me you die!" << infinite_loop());
   char you_want[256] = "you want";
-  BOOST_LOG_(1, "Let's say " << you_want << " to display " << 2);
-  BOOST_LOG_(1, "foo will be evaluated: " << foo());
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "Let's say " << you_want << " to display " << 2);
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "foo will be evaluated: " << foo());
   return 0;
 }

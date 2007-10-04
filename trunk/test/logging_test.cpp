@@ -17,7 +17,7 @@ boost::logging::logger lgr;
 
 int main(int argc, char **argv)
 {
-  lgr.add_format("[" >> boost::logging::level >> "],"
+  lgr.add_format("[" >> boost::logging::mask >> "],"
 		 >> boost::logging::filename >> "("
 		 >> boost::logging::line >> "),"
 		 >> boost::logging::time >> ","

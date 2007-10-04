@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   boost::logging::logger *l = boost::logging::logger::get_instance();
 
   boost::logging::format display_format(boost::logging::trace >> boost::logging::eol);
-  boost::logging::format file_format("[" >> boost::logging::level >> "],"
+  boost::logging::format file_format("[" >> boost::logging::mask >> "],"
                                          >> boost::logging::filename >> "("
                                          >> boost::logging::line >> "),"
                                          >> boost::logging::time >> ","
@@ -44,20 +44,20 @@ int main(int argc, char **argv)
   l->add_format(file_format);
 
 
-  boost::logging::sink file_sink(new std::ofstream("./output.log"), 3);
+  boost::logging::sink file_sink(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_3);
   file_sink.attach_qualifier(bl::log);
   file_sink.attach_qualifier(bl::error);
   l->add_sink(file_sink, file_format);
 
-  boost::logging::sink display_sink(&std::cout, 1);
+  boost::logging::sink display_sink(&std::cout, BOOST_LOG_MASK_LEVEL_1);
   display_sink.attach_qualifier(bl::notice);
   display_sink.attach_qualifier(bl::warning);
   l->add_sink(display_sink, display_format);
 
-  BOOST_LOG(1, bl::log, "Application starting");
-  BOOST_LOG(1, bl::notice, "Application version 1.0.3 - Copyright(2007) World Company");
+  BOOST_LOG(BOOST_LOG_LEVEL_1, bl::log, "Application starting");
+  BOOST_LOG(BOOST_LOG_LEVEL_1, bl::notice, "Application version 1.0.3 - Copyright(2007) World Company");
 
-  BOOST_LOG(1, bl::log, "do_something returned: " << do_something());
+  BOOST_LOG(BOOST_LOG_LEVEL_1, bl::log, "do_something returned: " << do_something());
   overheat(87);
   return 0;
 }

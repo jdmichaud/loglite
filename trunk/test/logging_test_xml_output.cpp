@@ -16,7 +16,7 @@ using namespace boost::logging;
 int main(int argc, char **argv)
 {
   BOOST_LOG_INIT(("\t<log>" >> eol >>
-      "\t\t<level>" >> level >> "</level>" >> eol >>
+      "\t\t<mask>" >> mask >> "</mask>" >> eol >>
       "\t\t<filename>" >> filename >> "</filename>" >> eol >>
       "\t\t<line>" >> line >> "</line>" >> eol >>
       "\t\t<time>" >> boost::logging::time >> "</time>" >> eol >>
@@ -25,11 +25,11 @@ int main(int argc, char **argv)
       "\t\t</trace>" >> eol >>
     "\t</log>" >> eol));
 
-  sink sink_file(new std::ofstream("./output.xml"), 2);
+  sink sink_file(new std::ofstream("./output.xml"), BOOST_LOG_MASK_LEVEL_2);
   sink_file.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
 
-  sink sink_cout(&std::cout, 2);
+  sink sink_cout(&std::cout, BOOST_LOG_MASK_LEVEL_2);
   sink_cout.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
 

@@ -17,23 +17,23 @@ void thread_log_something()
 {
   unsigned int i;
   for (i = 0; i < 20; ++i)
-    BOOST_LOG_(1, "loop index: " << i); 
+    BOOST_LOG_L1("loop index: " << i); 
 }
 
 int main(int argc, char **argv)
 {
-  BOOST_LOG_INIT(("[" >> boost::logging::level >> "],"
+  BOOST_LOG_INIT(("[" >> boost::logging::mask >> "],"
                       >> boost::logging::filename >> "("
                       >> boost::logging::line >> "),"
                       >> boost::logging::time >> ","
                       >> boost::logging::trace
                       >> boost::logging::eol));
 
-  boost::logging::sink sink_file(new std::ofstream("./output.log"), 2);
+  boost::logging::sink sink_file(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_2);
   sink_file.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
 
-  boost::logging::sink sink_cout(&std::cout, 2);
+  boost::logging::sink sink_cout(&std::cout, BOOST_LOG_MASK_LEVEL_2);
   sink_cout.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
 

@@ -16,7 +16,7 @@
 int main()
 {
   BOOST_LOG_INIT((boost::logging::trace >> boost::logging::eol)); // log format
-  boost::logging::sink s(&std::cout, 1);
+  boost::logging::sink s(&std::cout, BOOST_LOG_MASK_LEVEL_1);
   s.attach_qualifier(boost::logging::log);
 
   BOOST_LOG_ADD_OUTPUT_STREAM(s);
