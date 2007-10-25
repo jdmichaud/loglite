@@ -1,8 +1,8 @@
-//  Boost general library logging.hpp header file  ---------------------------//
+//  Boost general library logging.hpp header file  ---------------------------/
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
-//  sell and distribute this software is granted provided this copyright notice 
-//  appears in all copies. This software is provided "as is" without express or 
+//  sell and distribute this software is granted provided this copyright notice
+//  appears in all copies. This software is provided "as is" without express or
 //  implied warranty, and with no claim as to its suitability for any purpose.
 
 //  See http://www.boost.org/LICENSE_1_0.txt for licensing.
@@ -36,63 +36,64 @@
 #include <boost/format.hpp>
 
 #ifndef BOOST_NO_CODE_GENERATION_FOR_LOG
-#define BOOST_LOG_INIT( format )                                               \
-{                                                                              \
-  boost::logging::logger *l = boost::logging::logger::get_instance();          \
-  assert(l);                                                                   \
-  l->add_format(format);                                                       \
+#define BOOST_LOG_INIT( format )                                              \
+{                                                                             \
+  boost::logging::logger *l = boost::logging::logger::get_instance();         \
+  assert(l);                                                                  \
+  l->add_format(format);                                                      \
 }
 
-#define BOOST_LOG_ADD_OUTPUT_STREAM( sink )                                    \
-{                                                                              \
-  boost::logging::logger *l = boost::logging::logger::get_instance();          \
-  assert(l);                                                                   \
-  l->add_sink(sink);                                                           \
+#define BOOST_LOG_ADD_OUTPUT_STREAM( sink )                                   \
+{                                                                             \
+  boost::logging::logger *l = boost::logging::logger::get_instance();         \
+  assert(l);                                                                  \
+  l->add_sink(sink);                                                          \
 }
 
-#define BOOST_LOG(mask, qualifier, _trace)                                     \
-{                                                                              \
-  boost::logging::logger *l = boost::logging::logger::get_instance();          \
-  assert(l);                                                                   \
-  if (l->get_global_log_mask() & mask)                                         \
-  {                                                                            \
-    if (l->m_string_stream.str() != "")                                        \
-      l->m_string_stack.push(l->m_string_stream.str());                        \
-                                                                               \
-    l->m_string_stream.str("");                                                \
-    l->m_string_stream << _trace;                                              \
-    l->trace(mask, qualifier, l->m_string_stream.str(), __FILE__, __LINE__);   \
-    if (!l->m_string_stack.empty())                                            \
-    {                                                                          \
-      l->m_string_stream.str(l->m_string_stack.top());                         \
-      l->m_string_stack.pop();                                                 \
-    }                                                                          \
-  }                                                                            \
+#define BOOST_LOG(mask, qualifier, _trace)                                    \
+{                                                                             \
+  boost::logging::logger *l = boost::logging::logger::get_instance();         \
+  assert(l);                                                                  \
+  if (l->get_global_log_mask() & mask)                                        \
+  {                                                                           \
+    if (l->m_string_stream.str() != "")                                       \
+      l->m_string_stack.push(l->m_string_stream.str());                       \
+                                                                              \
+    l->m_string_stream.str("");                                               \
+    l->m_string_stream << _trace;                                             \
+    l->trace(mask, qualifier, l->m_string_stream.str(), __FILE__, __LINE__);  \
+    if (!l->m_string_stack.empty())                                           \
+    {                                                                         \
+      l->m_string_stream.str(l->m_string_stack.top());                        \
+      l->m_string_stack.pop();                                                \
+    }                                                                         \
+  }                                                                           \
 }
 
-#define BOOST_LOG_( mask, _trace )                                             \
+#define BOOST_LOG_( mask, _trace )                                            \
   { BOOST_LOG(mask, boost::logging::log, _trace) }
 
 #define BOOST_LOG_UNFORMATTED(mask, qualifier, _trace)                        \
-{                                                                              \
-  boost::logging::logger *l = boost::logging::logger::get_instance();          \
-  assert(l);                                                                   \
-  if (l->get_global_log_mask() & mask)                                         \
-  {                                                                            \
-    if (l->m_string_stream.str() != "")                                        \
-      l->m_string_stack.push(l->m_string_stream.str());                        \
-                                                                               \
-    l->m_string_stream.str("");                                                \
-    l->m_string_stream << _trace;                                              \
-    l->unformatted_trace(mask, qualifier,                                      \
-                         l->m_string_stream.str(), __FILE__, __LINE__);        \
-    if (!l->m_string_stack.empty())                                            \
-    {                                                                          \
-      l->m_string_stream.str(l->m_string_stack.top());                         \
-      l->m_string_stack.pop();                                                 \
-    }                                                                          \
-  }                                                                            \
+{                                                                             \
+  boost::logging::logger *l = boost::logging::logger::get_instance();         \
+  assert(l);                                                                  \
+  if (l->get_global_log_mask() & mask)                                        \
+  {                                                                           \
+    if (l->m_string_stream.str() != "")                                       \
+      l->m_string_stack.push(l->m_string_stream.str());                       \
+                                                                              \
+    l->m_string_stream.str("");                                               \
+    l->m_string_stream << _trace;                                             \
+    l->unformatted_trace(mask, qualifier,                                     \
+                         l->m_string_stream.str(), __FILE__, __LINE__);       \
+    if (!l->m_string_stack.empty())                                           \
+    {                                                                         \
+      l->m_string_stream.str(l->m_string_stack.top());                        \
+      l->m_string_stack.pop();                                                \
+    }                                                                         \
+  }                                                                           \
 }
+
 #else // !BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )
 #define BOOST_LOG_ADD_OUTPUT_STREAM( sink )
@@ -143,7 +144,7 @@ namespace boost {
                   unsigned int>                         log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format&>                        sink_format_assoc_t;
-    typedef std::list<sink_format_assoc_t>             sink_format_assoc_list_t;
+    typedef std::list<sink_format_assoc_t>            sink_format_assoc_list_t;
     typedef std::list<qualifier *>                      qualifier_list_t;
 
 //  Used for shared_ptr() on statically allocated log_element ----------------//
@@ -292,7 +293,7 @@ namespace boost {
       std::string to_string() { return "\f"; };
     };
 
-//  Format class declatation -------------------------------------------------//
+//  Format class declatation ------------------------------------------------//
     class format
     {
     public:
@@ -331,11 +332,11 @@ namespace boost {
       // Visitors for the log elements
       std::string accept(log_element &e)
       {
-	      return e.to_string();
+        return e.to_string();
       }
       std::string accept(mask_element &e, mask_t l)
       {
-	      return e.to_string(l);
+        return e.to_string(l);
       }
       std::string accept(trace_element &e, const std::string& s)
       {
@@ -355,7 +356,7 @@ namespace boost {
       std::string       m_identifier;
     };
 
-//  Sink class declaration ---------------------------------------------------//
+//  Sink class declaration --------------------------------------------------//
     class sink
     {
     public:
