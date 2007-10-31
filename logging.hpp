@@ -56,17 +56,9 @@
   assert(l);                                                                  \
   if (l->get_global_log_mask() & mask)                                        \
   {                                                                           \
-    if (l->m_string_stream.str() != "")                                       \
-      l->m_string_stack.push(l->m_string_stream.str());                       \
-                                                                              \
-    l->m_string_stream.str("");                                               \
-    l->m_string_stream << _trace;                                             \
-    l->trace(mask, qualifier, l->m_string_stream.str(), __FILE__, __LINE__);  \
-    if (!l->m_string_stack.empty())                                           \
-    {                                                                         \
-      l->m_string_stream.str(l->m_string_stack.top());                        \
-      l->m_string_stack.pop();                                                \
-    }                                                                         \
+    std::stringstream string_stream;                                          \
+    string_stream << _trace;                                                  \
+    l->trace(mask, qualifier, string_stream.str(), __FILE__, __LINE__);       \
   }                                                                           \
 }
 
@@ -79,18 +71,10 @@
   assert(l);                                                                  \
   if (l->get_global_log_mask() & mask)                                        \
   {                                                                           \
-    if (l->m_string_stream.str() != "")                                       \
-      l->m_string_stack.push(l->m_string_stream.str());                       \
-                                                                              \
-    l->m_string_stream.str("");                                               \
-    l->m_string_stream << _trace;                                             \
+    std::stringstream string_stream;                                          \
+    string_stream << _trace;                                                  \
     l->unformatted_trace(mask, qualifier,                                     \
-                         l->m_string_stream.str(), __FILE__, __LINE__);       \
-    if (!l->m_string_stack.empty())                                           \
-    {                                                                         \
-      l->m_string_stream.str(l->m_string_stack.top());                        \
-      l->m_string_stack.pop();                                                \
-    }                                                                         \
+                         string_stream.str(), __FILE__, __LINE__);            \
   }                                                                           \
 }
 
@@ -143,7 +127,7 @@ namespace boost {
                   std::string, 
                   unsigned int>                         log_param_t;
     typedef std::list<format>                           format_list_t;
-    typedef tuple<sink, format&>                        sink_format_assoc_t;
+    typedef tuple<sink, format>                         sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>            sink_format_assoc_list_t;
     typedef std::list<qualifier *>                      qualifier_list_t;
 
@@ -469,12 +453,12 @@ namespace boost {
       }
 
 
-      void add_format(const format &f)
+      void add_format(format f)
       {
         m_format_list.push_back(f);
       }
 
-      void add_sink(const sink &s)
+      void add_sink(sink s)
       {
         if (m_format_list.begin() == m_format_list.end())
           throw "no format defined";
@@ -488,7 +472,7 @@ namespace boost {
           );
       }
 
-      void add_sink(const sink &s, format &f)
+      void add_sink(sink s, format f)
       {
         // Updating global_mask used for full lazy evaluation
         m_global_log_mask |= s.get_log_mask();
@@ -524,10 +508,6 @@ namespace boost {
 			     const std::string &f, 
 			     unsigned int      ln);
 
-    public:
-      std::stringstream       m_string_stream;
-      std::stack<std::string> m_string_stack;
-      
     private:
       format_list_t            m_format_list;
       sink_format_assoc_list_t m_sink_format_assoc;
