@@ -1,9 +1,10 @@
 //  Boost general library logging.hpp header file  ---------------------------/
 
-//  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
-//  sell and distribute this software is granted provided this copyright notice
-//  appears in all copies. This software is provided "as is" without express or
-//  implied warranty, and with no claim as to its suitability for any purpose.
+//  (C) Copyright Jean-Daniel Michaud, Igor Pokolev 2007. 
+//  Permission to copy, use, modify, sell and distribute this software is 
+//  granted provided this copyright notice appears in all copies. 
+//  This software is provided "as is" without express or implied warranty, 
+//  and with no claim as to its suitability for any purpose.
 
 //  See http://www.boost.org/LICENSE_1_0.txt for licensing.
 //  See http://code.google.com/p/loglite/ for library home page.
@@ -271,7 +272,7 @@ namespace boost {
       std::string m_qualifier_identifier;
     };
 
-    class eot_element : public log_element
+    class eot_element : public log_element  //end-of-trace qualifier
     {
     public:
       std::string to_string() { return "\f"; };
@@ -407,50 +408,40 @@ namespace boost {
     static error_qualifier   error     = error_qualifier();
 
 //  Logger class declaration  ------------------------------------------------//
+    static logger             *g__logger = NULL;
     class logger
     {
     public: 
       logger() : m_global_log_mask(0) {}
         
-      /* crashes msvc-8.0 !!
-      void create_instance(logger *l)
+      static void create_instance()
       {
-        static logger             *_l = NULL;
-
-        if (!_l)
-        {
-          _l = new logger();
-          static shared_ptr<logger> s_ptr_l(_l);
-        }
-
-        l = _l;
+        g__logger = new logger();
       }
 
       static logger *get_instance()
       {
-        logger                    *l;
         static boost::once_flag   once = BOOST_ONCE_INIT;
-        boost::call_once(boost::bind(&logger::create_instance, boost::ref(l)), once);
-        return l;
+		boost::call_once(logger::create_instance, once);
+        return g__logger;
       }
-      */
 
-      static logger *get_instance()
-      {
-#if defined(BOOST_HAS_THREADS)
-        static boost::mutex m_inst_mutex;
-        boost::mutex::scoped_lock scoped_lock(m_inst_mutex);
-#endif // BOOST_HAS_THREADS
-        static logger             *l = NULL;
-
-        if (!l)
-        {
-          l = new logger();
-          static shared_ptr<logger> s_ptr_l(l);
-        }
-
-        return l;
-      }
+//      static logger *get_instance()
+//      {
+//#if defined(BOOST_HAS_THREADS)
+//        static boost::mutex m_inst_mutex;
+//        boost::mutex::scoped_lock scoped_lock(m_inst_mutex);
+//#endif // BOOST_HAS_THREADS
+//        static logger             *l = NULL;
+//
+//        if (!l)
+//        {
+//          l = new logger();
+//          static shared_ptr<logger> s_ptr_l(l);
+//        }
+//
+//        return l;
+//      }
 
 
       void add_format(format f)
