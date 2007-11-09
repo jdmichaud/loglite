@@ -13,11 +13,17 @@
 #include <fstream>
 #include <logging.hpp>
 
+int foo(int i)
+{
+  BOOST_LOG_L1("foo called"); 
+  return i;
+}
+
 void thread_log_something()
 {
   unsigned int i;
-  for (i = 0; i < 20; ++i)
-    BOOST_LOG_L1("loop index: " << i); 
+  for (i = 0; i < 100; ++i)
+    BOOST_LOG_L1("loop index: " << foo(i)); 
 }
 
 int main(int argc, char **argv)
@@ -39,7 +45,7 @@ int main(int argc, char **argv)
 
   boost::thread_group thrd;
   unsigned int i;
-  for (i = 0; i < 10; ++i)
+  for (i = 0; i < 20; ++i)
     thrd.create_thread(boost::bind(thread_log_something));
 
   thrd.join_all();
