@@ -1,6 +1,6 @@
 //  Boost general library logging.hpp header file  ---------------------------/
 
-//  (C) Copyright Jean-Daniel Michaud, Igor Pokolev 2007. 
+//  (C) Copyright Jean-Daniel Michaud, Ilya Pokolev 2007. 
 //  Permission to copy, use, modify, sell and distribute this software is 
 //  granted provided this copyright notice appears in all copies. 
 //  This software is provided "as is" without express or implied warranty, 
