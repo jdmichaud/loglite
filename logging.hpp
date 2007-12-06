@@ -23,12 +23,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/ref.hpp>
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
 #endif
 #if defined(BOOST_HAS_THREADS)
+#  include <boost/thread/once.hpp>
 #  include <boost/thread/thread.hpp>
 #  include <boost/thread/condition.hpp>
 #endif // BOOST_HAS_THREADS
@@ -39,22 +39,19 @@
 #ifndef BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )                                              \
 {                                                                             \
-  boost::logging::logger *l = boost::logging::logger::get_instance();         \
-  assert(l);                                                                  \
+  boost::logging::logger_p l = boost::logging::logger::get_instance();        \
   l->add_format(format);                                                      \
 }
 
 #define BOOST_LOG_ADD_OUTPUT_STREAM( sink )                                   \
 {                                                                             \
-  boost::logging::logger *l = boost::logging::logger::get_instance();         \
-  assert(l);                                                                  \
+  boost::logging::logger_p l = boost::logging::logger::get_instance();        \
   l->add_sink(sink);                                                          \
 }
 
 #define BOOST_LOG(mask, qualifier, _trace)                                    \
 {                                                                             \
-  boost::logging::logger *l = boost::logging::logger::get_instance();         \
-  assert(l);                                                                  \
+  boost::logging::logger_p l = boost::logging::logger::get_instance();        \
   if (l->get_global_log_mask() & mask)                                        \
   {                                                                           \
     std::stringstream string_stream;                                          \
@@ -68,8 +65,7 @@
 
 #define BOOST_LOG_UNFORMATTED(mask, qualifier, _trace)                        \
 {                                                                             \
-  boost::logging::logger *l = boost::logging::logger::get_instance();         \
-  assert(l);                                                                  \
+  boost::logging::logger_p l = boost::logging::logger::get_instance();        \
   if (l->get_global_log_mask() & mask)                                        \
   {                                                                           \
     std::stringstream string_stream;                                          \
@@ -131,6 +127,7 @@ namespace boost {
     typedef tuple<sink, format>                         sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>            sink_format_assoc_list_t;
     typedef std::list<qualifier *>                      qualifier_list_t;
+    typedef shared_ptr<logger>                          logger_p;
 
 //  Used for shared_ptr() on statically allocated log_element ----------------//
     struct null_deleter
@@ -355,11 +352,12 @@ namespace boost {
 
         set_log_mask(log_mask);
       }
-
+      
       void set_log_mask(mask_t log_mask)
       { 
-        m_log_mask = ((BOOST_LOG_MASK_UP_LIMIT < log_mask) 
-          ? BOOST_LOG_MASK_UP_LIMIT : log_mask);
+        //        m_log_mask = ((BOOST_LOG_MASK_UP_LIMIT < log_mask) 
+        //          ? BOOST_LOG_MASK_UP_LIMIT : log_mask);
+        m_log_mask = log_mask;
       }
 
       inline mask_t get_log_mask() const { return m_log_mask; }
@@ -408,7 +406,7 @@ namespace boost {
     static error_qualifier   error     = error_qualifier();
 
 //  Logger class declaration  ------------------------------------------------//
-    static logger             *g__logger = NULL;
+    static logger_p g__logger;
     class logger
     {
     public: 
@@ -416,13 +414,13 @@ namespace boost {
         
       static void create_instance()
       {
-        g__logger = new logger();
+        g__logger.reset(new logger());
       }
 
-      static logger *get_instance()
+      static logger_p &get_instance()
       {
         static boost::once_flag   once = BOOST_ONCE_INIT;
-		boost::call_once(logger::create_instance, once);
+        boost::call_once(logger::create_instance, once);
         return g__logger;
       }
 

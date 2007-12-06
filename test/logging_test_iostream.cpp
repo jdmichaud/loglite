@@ -26,9 +26,7 @@ int main(int argc, char **argv)
   out->push(boost::iostreams::gzip_compressor());
   out->push(boost::iostreams::file_sink("log.gz"));
 
-  *out << "this is a test" << std::endl;
-
-  sink sink_file(out, 2);
+  sink sink_file(out, BOOST_LOG_MASK_LEVEL_2);
   sink_file.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
 
@@ -36,6 +34,5 @@ int main(int argc, char **argv)
   BOOST_LOG_(1, "is no basis for a system of government");
   BOOST_LOG_(1, "Supreme executive power derives from a mandate of the masses");
   BOOST_LOG_(1, "not from some farcical aquatic ceremony!");
-
   return 0;
 }

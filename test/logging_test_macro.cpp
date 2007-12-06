@@ -32,7 +32,6 @@ int main(int argc, char **argv)
                       >> boost::logging::trace
                       >> boost::logging::eol)); // log format
 
-
   boost::logging::sink s1(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_2);
   s1.attach_qualifier(boost::logging::log);
   BOOST_LOG_ADD_OUTPUT_STREAM(s1);
