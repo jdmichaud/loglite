@@ -1,7 +1,7 @@
 # Makefile for logging
 
 CC	= g++
-BOOST	= ../../../boost-latest/
+BOOST	= /home/michaudjd/lib/boost-trunk/
 SRC	= ../test/logging_test.cpp		\
 	../test/logging_test_hello_world.cpp	\
 	../test/logging_test_macro.cpp		\
@@ -29,10 +29,10 @@ EXE4	= ../test/logging_test_iostream_shmem
 CLEXE	= ../test/logging_test_iostream_client
 SRVEXE	= ../test/logging_test_iostream_server
 INCLUDE	= -I../ -I../test -I$(BOOST)
-LIBS	= -static -L$(BOOST)/stage/lib		\
+LIBS	= -L$(BOOST)/stage/lib		\
 	-lboost_thread-gcc40-mt-d-1_35		\
 	-lboost_date_time-gcc40-mt-d-1_35	\
-	-lboost_system-gcc40-mt-d-1_35	\
+	-lboost_system-gcc40-mt-d-1_35		\
 	-pthread -lz
 CFLAGS	= -c -Wfatal-errors -ggdb3 $(INCLUDE)
 

@@ -31,7 +31,7 @@ int do_something()
 
 int main(int argc, char **argv)
 {
-  boost::logging::logger *l = boost::logging::logger::get_instance();
+  boost::logging::logger_p l = boost::logging::logger::get_instance();
 
   boost::logging::format display_format(boost::logging::trace >> boost::logging::eol);
   boost::logging::format file_format("[" >> boost::logging::mask >> "],"
