@@ -39,8 +39,14 @@ int main(int argc, char **argv)
     sink_network.attach_qualifier(boost::logging::log);
     BOOST_LOG_ADD_OUTPUT_STREAM(sink_network);
 
-    for (int count = 0; count < 1000; ++count)
+    for (int count = 0; count < 100; ++count)
     {
+      boost::xtime xt;
+      boost::xtime_get(&xt, boost::TIME_UTC);
+      xt.sec += 1;
+      boost::thread::sleep(xt);
+      
+      std::cout << "client: " << argv[2] << " trace: " << count << std::endl;
       BOOST_LOG_(1, "Strange women lying in ponds distributing swords");
       BOOST_LOG_(1, "is no basis for a system of government");
       BOOST_LOG_(1, "Supreme executive power derives from a mandate of the masses");
