@@ -29,7 +29,7 @@ void push_trace(const std::string &t)
 {
   std::cout << "thread created. # of threads: " << ++nbthread << std::endl;
   boost::mutex::scoped_lock scoped_lock(m);
-  out << t;
+  out << t << std::flush;
   --nbthread;
 }
 
@@ -42,7 +42,8 @@ void accept(tcp::acceptor &acceptor)
   std::string line;
   boost::thread_group thrd_group;
   while (std::getline(stream, line, '\f'))
-    thrd_group.create_thread(boost::bind(&push_trace, line));
+    //thrd_group.create_thread(boost::bind(&push_trace, line));
+	push_trace(line);
 
   thrd_group.join_all();
   thrd.join();
