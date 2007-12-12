@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <title>Boost.Logging: Index</title>
+    <meta name="generator" content="HTML Tidy, see www.w3.org">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href="../../../boost.css">
+  </head>
+  <body>
+    <p></p>
+    <table id="Table1" cellspacing="1" cellpadding="1" width="100%" border="0">
+      <tr>
+        <td valign="top" width="300">
+          <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+        </td>
+        <td width="353">
+          <h1 align="center">Boost.Logging</h1>
+          <h2 align="center">Reference</h2>
+        </td>
+        <td width="50">
+          <h3><a href="index.html"><img height="45" width="43" alt="Boost Libraries Index" src="uarrow.gif" border="0"></a></h3>
+        </td>
+      </tr>
+    </table>
+    <hr>
+    <h2>Reference</h2>
+    <dl class="index">
+      <dt><a href="reference.html#macro">             Macros</a>
+      <dt><a href="reference.html#logger">            logger</a> class
+      <dt><a href="reference.html#log_element">       log_element</a> class
+        <dl class="index">
+          <dt><a href="reference.html#level_element">     level_element</a> class
+          <dt><a href="reference.html#trace_element">     trace_element</a> class
+          <dt><a href="reference.html#filename_element">  filename_element</a> class
+          <dt><a href="reference.html#line_element">      line_element</a> class
+          <dt><a href="reference.html#literal_element">   literal_element</a> class
+          <dt><a href="reference.html#eol_element">       eol_element</a> class
+          <dt><a href="reference.html#static_element">    Statically defined elements</a> class
+        </dl>
+      </dt>
+
+    <h3><a name="macro"></a>Macro</h3>
+    <b>BOOST_LOG_INIT(format, level)</b>
+    <br>&nbsp;&nbsp;This macro initializes the logger. Any call to <b>BOOST_LOG</b> before the initialization
+    will be discarded.
+    <br>
+    <br>&nbsp;&nbsp;<b>format</b>: Describe the log format using element. Each element has a specific behaviour described <a href="reference.html#log_element"> below</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>element_list_t</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
+    <pre>
+boost::logging::element_list_t list;
+list.push_back(<a href="reference.html#trace_element">boost::logging::trace</a>); 
+list.push_back(<a href="reference.html#eol_element">boost::logging::eol</a>);
+    </pre>
+    &nbsp;&nbsp;<b>level</b>: Set the maximum log level accepted. Any log with level striclty superior will be discarded.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>level_t</i></a>
+
+    <br>
+    <br>
+    <b>BOOST_LOG_ADD_OUTPUT_STREAM(stream)</b>
+    <br>&nbsp;&nbsp;This macro add a stream to the list. Any call to <b>BOOST_LOG</b> with an empty stream list
+    will be discarded.
+    <br>
+    <br>&nbsp;&nbsp;<b>stream</b>: stream to add. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <i>std::ostream *</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
+    <pre>
+BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"))
+BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout)
+    </pre>
+
+    <b>BOOST_LOG(level, trace)</b>
+    <br>&nbsp;&nbsp;This macro log the trace. Any call to <b>BOOST_LOG</b> before the initialization
+    will be discarded.
+    <br>
+    <br>&nbsp;&nbsp;<b>level</b>: log level. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>level_t</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
+    <br>
+    <br>&nbsp;&nbsp;<b>tracet</b>: List of token that can be streamed into a <i>std::stringstream</i>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>std::stringstream</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
+    <pre>
+BOOST_LOG(1, "The error code is: " << errno())
+    </pre>
+
+    <b>BOOST_LOG_UNFORMATTED(level, trace)</b>
+    <br>&nbsp;&nbsp;This macro log an unformatted trace. Equivalent to BOOST_LOG in usage, it will produce a log
+    that will not follow the format described during the call to BOOST_LOG_INIT. Useful for header and footer of particular
+    log format (i.e.: xml).
+    <br>
+    <br>&nbsp;&nbsp;<b>level</b>: log level. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>level_t</i></a>
+    <br>
+    <br>&nbsp;&nbsp;<b>tracet</b>: List of token that can be streamed into a <i>std::stringstream</i>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>std::stringstream</i></a>
+    <br><br>&nbsp;&nbsp;example: 
+    <pre>
+BOOST_LOG_UNFORMATTED(1, "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;" << std::endl);
+    </pre>
+
+    <h3><a name="logger"></a>logger class</h3>
+    <pre>
+namespace boost {
+
+  namespace logging {
+    
+    typedef enum { LEVEL = 0, TRACE, FILENAME, LINE }        param_e;
+    typedef std::list&lt;boost::shared_ptr&lt;log_element&gt; &gt;  element_list_t;
+    typedef std::list&lt;boost::shared_ptr&lt;std::ostream&gt; &gt;  stream_list_t;
+    typedef unsigned short                              level_t;
+    typedef tuple&lt;level_t, std::string, std::string, unsigned int&gt; log_param_t;
+
+    class logger
+    {
+    public: 
+      logger() : m_max_log_level(0) {}
+      logger(element_list_t &e, level_t max_log_level = 1) 
+         : m_element_list(e), m_max_log_level(max_log_level) {}
+    
+      void set_format(element_list_t &e);
+      void set_max_log_level(level_t max_log_level);
+      void set_output_streams(stream_list_t &s);
+      static logger *get_instance();
+              
+      // Visitors for the log elements
+      std::string accept(log_element &e);
+      std::string accept(level_element &e, level_t l);
+      std::string accept(trace_element &e, const std::string &s);
+      std::string accept(filename_element &e, const std::string &s);
+      std::string accept(line_element &e, unsigned int l);
+    
+      void trace(unsigned short l,
+                 const std::string &t, 
+                 const std::string &f, 
+                 unsigned int      ln);
+
+      void unformatted_trace(unsigned short l,
+                             const std::string &t, 
+                             const std::string &f, 
+                             unsigned int      ln);
+    private:
+      element_list_t  m_element_list;
+      stream_list_t   m_stream_list;
+      level_t         m_max_log_level;
+    #if defined(BOOST_HAS_THREADS)
+      boost::mutex    m_mutex;
+    #endif // BOOST_HAS_THREADS
+    };  // logger
+  }
+}
+    </pre>    
+
+    <h3><a name="log_element"></a>log_element class</h3>
+    <pre>
+class log_element
+{
+public:
+  virtual std::string to_string();
+  virtual std::string visit(logger &l, const log_param_t &log_param);
+};
+    </pre>
+    <h3><a name="level_element"></a>level_element class</h3>
+    <pre>
+class level_element : public log_element
+{
+public:
+  std::string to_string(level_t l);
+  std::string visit(logger &l, const log_param_t &log_param);
+};
+    </pre>
+    <h3><a name="trace_element"></a>trace_element class</h3>
+    <pre>
+class trace_element : public log_element
+{
+public:
+  std::string to_string(const std::string& s);
+  std::string visit(logger &l, const log_param_t &log_param);
+};
+    </pre>
+    <h3><a name="filename_element"></a>filename_element class</h3>
+    <pre>
+class filename_element : public log_element
+{
+public:
+  std::string to_string();
+  std::string visit(logger &l, const log_param_t &log_param);
+};
+    </pre>
+    <h3><a name="date_element"></a>filename_element class</h3>
+    <pre>
+class date_element : public log_element
+{
+public:
+  std::string to_string();
+};
+    </pre>
+    <h3><a name="time_element"></a>filename_element class</h3>
+    <pre>
+class time_element : public log_element
+{
+public:
+  std::string to_string();
+};
+    </pre>
+    <h3><a name="line_element"></a>line_element class</h3>
+    <pre>
+class line_element : public log_element
+{
+public:
+  std::string to_string();
+  std::string visit(logger &l, const log_param_t &log_param);
+};
+    </pre>
+    <h3><a name="literal_element"></a>literal_element</h3>
+    <pre>
+class literal_element : public log_element
+{
+public:
+  literal_element(const std::string &l);
+  std::string to_string();
+private:
+  std::string m_literal;
+};
+    </pre>
+    <h3><a name="eol_element"></a>eol_element class</h3>
+    <pre>    
+class eol_element : public log_element
+{
+public:
+  std::string to_string();
+};
+    </pre>
+
+    <h3><a name="static_element"></a>Statically defined elements</h3>
+    <pre>    
+level_element     level     = level_element();
+filename_element  filename  = filename_element();
+line_element      line      = line_element();
+date_element      date      = date_element();
+time_element      time      = time_element();
+trace_element     trace     = trace_element();
+eol_element       eol       = eol_element();
+    </pre>
+    <hr>
+    <p>Revised 
+       <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+       31&nbsp;March 2007&nbsp; 
+       <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+    <p><i>© Copyright Jean-Daniel Michaud&nbsp;2007
+    <P><I>Use, modification and distribution are subject to the Boost Software License, 
+          Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+          or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+  </body>
+</html>
