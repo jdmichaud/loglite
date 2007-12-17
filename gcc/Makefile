@@ -34,7 +34,8 @@ LIBS	= -L$(BOOST)/stage/lib		\
 	-lboost_date_time-gcc40-mt-d-1_35	\
 	-lboost_system-gcc40-mt-d-1_35		\
 	-pthread -lz
-CFLAGS	= -c -Wfatal-errors -ggdb3 $(INCLUDE)
+#CFLAGS	= -c -Wfatal-errors -ggdb3 $(INCLUDE)
+CFLAGS	= -c -ggdb3 $(INCLUDE)
 
 all: $(EXE) $(EXE2) $(EXE3) $(CLEXE) $(SRVEXE) $(EXE4)
 

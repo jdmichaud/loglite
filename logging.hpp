@@ -36,6 +36,16 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
 
+// Code copied from redhat website
+#if __STDC_VERSION__ < 199901L
+# if __GNUC__ >= 2
+#  define __func__ __FUNCTION__
+# else
+#  define __func__ "<unknown>"
+# endif
+#endif
+// !Code copied from redhat website
+
 #ifndef BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )                                              \
 {                                                                             \
@@ -56,7 +66,12 @@
   {                                                                           \
     std::stringstream string_stream;                                          \
     string_stream << _trace;                                                  \
-    l->trace(mask, qualifier, string_stream.str(), __FILE__, __LINE__);       \
+    log_param_t log_param(mask,                                               \
+                          &qualifier,                                         \
+                          string_stream.str(),                                \
+                          __FILE__, __LINE__,                                 \
+                          __func__, __PRETTY_FUNCTION__);                     \
+    l->trace(log_param);                                                      \
   }                                                                           \
 }
 
@@ -70,8 +85,12 @@
   {                                                                           \
     std::stringstream string_stream;                                          \
     string_stream << _trace;                                                  \
-    l->unformatted_trace(mask, qualifier,                                     \
-                         string_stream.str(), __FILE__, __LINE__);            \
+    log_param_t log_param(mask,                                               \
+                          &qualifier,                                         \
+                          string_stream.str(),                                \
+                          __FILE__, __LINE__,                                 \
+                          __func__, __PRETTY_FUNCTION__);                     \
+    l->unformatted_trace(log_param);                                          \
   }                                                                           \
 }
 
@@ -122,7 +141,9 @@ namespace boost {
                   const qualifier *,
                   std::string, 
                   std::string, 
-                  unsigned int>                         log_param_t;
+                  unsigned int,
+                  std::string,
+                  std::string>                          log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format>                         sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>            sink_format_assoc_list_t;
@@ -275,6 +296,21 @@ namespace boost {
       std::string to_string() { return "\f"; };
     };
 
+    class function_name_element : public log_element  //function name qualifier
+    {
+    public:
+      std::string to_string(const std::string &n) { return n; }
+      std::string visit(format &f, const log_param_t &log_param);
+    };
+
+    // pretty function name qualifier
+    class pretty_function_name_element : public log_element
+    {
+    public:
+      std::string to_string(const std::string &n) { return n; }
+      std::string visit(format &f, const log_param_t &log_param);
+    };
+
 //  Format class declatation ------------------------------------------------//
     class format
     {
@@ -331,6 +367,14 @@ namespace boost {
       std::string accept(line_element &e, unsigned int l)
       {
         return e.to_string(l);
+      }
+      std::string accept(function_name_element &e, const std::string& s)
+      {
+        return e.to_string(s);
+      }
+      std::string accept(pretty_function_name_element &e, const std::string& s)
+      {
+        return e.to_string(s);
       }
 
     private:
@@ -399,6 +443,10 @@ namespace boost {
     static trace_element     trace     = trace_element();
     static eol_element       eol       = eol_element();
     static eot_element       eot       = eot_element();
+    static function_name_element 
+                       function_name   = function_name_element();
+    static pretty_function_name_element 
+                  function_signature   = pretty_function_name_element();
 
     static log_qualifier     log       = log_qualifier();
     static notice_qualifier  notice    = notice_qualifier();
@@ -472,17 +520,12 @@ namespace boost {
       inline mask_t get_global_log_mask() 
       { return m_global_log_mask; }
 
-      void trace(unsigned short     l, 
-                 const qualifier   &q, 
-                 const std::string &t, 
-                 const std::string &f, 
-                 unsigned int      ln)
+      void trace(const log_param_t &log_param)
       {
 #if defined(BOOST_HAS_THREADS)
         boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
-        log_param_t log_param(l, &q, t, f, ln);
         sink_format_assoc_list_t::iterator 
           s_it = m_sink_format_assoc.begin();
         for (; s_it != m_sink_format_assoc.end(); ++s_it)
@@ -491,11 +534,7 @@ namespace boost {
         }
       }
       
-      void unformatted_trace(unsigned short     l, 
-			     const qualifier   &q, 
-			     const std::string &t, 
-			     const std::string &f, 
-			     unsigned int      ln);
+      void unformatted_trace(const log_param_t &log_param);
 
     private:
       format_list_t            m_format_list;
@@ -591,16 +630,11 @@ inline boost::logging::element_list_t operator>>(
 }
 
 inline
-void boost::logging::logger::unformatted_trace(unsigned short     l, 
-					       const qualifier   &q, 
-                                               const std::string &t, 
-                                               const std::string &f, 
-                                               unsigned int      ln)
+void boost::logging::logger::unformatted_trace(const log_param_t &log_param)
 {
 #if defined(BOOST_HAS_THREADS)
   boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
-  log_param_t log_param(l, &q, t, f, ln);
   sink_format_assoc_list_t::iterator 
     s_it = m_sink_format_assoc.begin();
   for (; s_it != m_sink_format_assoc.end(); ++s_it)
