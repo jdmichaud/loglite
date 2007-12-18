@@ -66,11 +66,11 @@
   {                                                                           \
     std::stringstream string_stream;                                          \
     string_stream << _trace;                                                  \
-    log_param_t log_param(mask,                                               \
-                          &qualifier,                                         \
-                          string_stream.str(),                                \
-                          __FILE__, __LINE__,                                 \
-                          __func__, __PRETTY_FUNCTION__);                     \
+    boost::logging::log_param_t log_param = { mask,                           \
+                              &qualifier,                                     \
+                              string_stream.str(),                            \
+                              __FILE__, __LINE__,                             \
+                              __func__, __PRETTY_FUNCTION__ };                \
     l->trace(log_param);                                                      \
   }                                                                           \
 }
@@ -85,11 +85,11 @@
   {                                                                           \
     std::stringstream string_stream;                                          \
     string_stream << _trace;                                                  \
-    log_param_t log_param(mask,                                               \
-                          &qualifier,                                         \
-                          string_stream.str(),                                \
-                          __FILE__, __LINE__,                                 \
-                          __func__, __PRETTY_FUNCTION__);                     \
+    boost::logging::log_param_t log_param = { mask,                           \
+                              &qualifier,                                     \
+                              string_stream.str(),                            \
+                              __FILE__, __LINE__,                             \
+                              __func__, __PRETTY_FUNCTION__ } ;               \
     l->unformatted_trace(log_param);                                          \
   }                                                                           \
 }
@@ -102,7 +102,7 @@
 #define BOOST_LOG_UNFORMATTED(mask, qualifier, _trace)
 #endif // BOOST_NO_CODE_GENERATION_FOR_LOG
 
-#define BOOST_LOG_MAX_LINE_STR_SIZE       20 // log(2^64)
+#define BOOST_LOG_MAX_LINE_STR_SIZE       20    // log(2^64)
 #define BOOST_LOG_MASK_UP_LIMIT           65535 // 2^sizeof (mask_t) - 1
 #define BOOST_LOG_MASK_LEVEL_1            1     // 0001
 #define BOOST_LOG_MASK_LEVEL_2            3     // 0011
@@ -132,18 +132,20 @@ namespace boost {
     class logger;
     
 //  Logging typedefs declarations --------------------------------------------//
-    typedef enum { MASK = 0, QUALIFIER, TRACE, FILENAME, LINE }   param_e;
     typedef enum { SINK = 0, FORMAT }                   sink_format_assoc_e;
     typedef std::list<boost::shared_ptr<log_element> >  element_list_t;
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
     typedef unsigned short                              mask_t;
-    typedef tuple<mask_t, 
-                  const qualifier *,
-                  std::string, 
-                  std::string, 
-                  unsigned int,
-                  std::string,
-                  std::string>                          log_param_t;
+    typedef struct
+    {
+      mask_t           m_mask;
+      const qualifier *m_qualifier;
+      std::string      m_trace;
+      std::string      m_filename;
+      unsigned int     m_line;
+      std::string      m_func_name;
+      std::string      m_func_sig;
+    } log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format>                         sink_format_assoc_t;
     typedef std::list<sink_format_assoc_t>            sink_format_assoc_list_t;
@@ -409,13 +411,13 @@ namespace boost {
       void consume_trace(format &f, const log_param_t &log_param)
       {
         /* make here check to avoid producing a useless trace */
-        if (get<MASK>(log_param) > m_log_mask)
+        if (log_param.m_mask > m_log_mask)
           return ;
 
         qualifier_list_t::const_iterator it = m_qualifier_list.begin();
         bool qualifier_present = false;
         for ( ; !qualifier_present && it !=  m_qualifier_list.end(); ++it)
-          qualifier_present = (**it == *get<QUALIFIER>(log_param));
+          qualifier_present = (**it == *log_param.m_qualifier);
 
         if (!qualifier_present)
           return ;
@@ -472,24 +474,6 @@ namespace boost {
         return g__logger;
       }
 
-//      static logger *get_instance()
-//      {
-//#if defined(BOOST_HAS_THREADS)
-//        static boost::mutex m_inst_mutex;
-//        boost::mutex::scoped_lock scoped_lock(m_inst_mutex);
-//#endif // BOOST_HAS_THREADS
-//        static logger             *l = NULL;
-//
-//        if (!l)
-//        {
-//          l = new logger();
-//          static shared_ptr<logger> s_ptr_l(l);
-//        }
-//
-//        return l;
-//      }
-
-
       void add_format(format f)
       {
         m_format_list.push_back(f);
@@ -519,6 +503,25 @@ namespace boost {
 
       inline mask_t get_global_log_mask() 
       { return m_global_log_mask; }
+
+      void trace(mask_t m, 
+                 const qualifier &q, 
+                 const std::string &s, 
+                 const std::string &f = "<unknown>",
+                 unsigned int l = 0)
+      {
+        log_param_t log_param = { m, &q, s, f, l, "<unknown>", "<unknown>" };
+        trace(log_param);
+      }
+
+      void unformatted_trace(mask_t m, 
+                             const qualifier &q, 
+                             const std::string &s)
+      {
+        log_param_t log_param = { m, &q, s, 
+                                  "<unknown>", 0, "<unknown>", "<unknown>" };
+        unformatted_trace(log_param);
+      }
 
       void trace(const log_param_t &log_param)
       {
@@ -559,25 +562,43 @@ namespace boost {
     inline std::string mask_element::visit(format &f, 
                                            const log_param_t &log_param)
     {
-      return f.accept(*this, get<MASK>(log_param));
+      return f.accept(*this, log_param.m_mask);
     }
 
     inline std::string trace_element::visit(format &f, 
                                             const log_param_t &log_param)
     {
-      return f.accept(*this, get<TRACE>(log_param));
+      return f.accept(*this, log_param.m_trace);
     }
 
     inline std::string filename_element::visit(format &f, 
                                                const log_param_t &log_param)
     {
-      return f.accept(*this, get<FILENAME>(log_param));
+      return f.accept(*this, log_param.m_filename);
     }
 
     inline std::string line_element::visit(format &f, 
                                            const log_param_t &log_param)
     {
-      return f.accept(*this, get<LINE>(log_param));
+      return f.accept(*this, log_param.m_line);
+    }
+
+    inline std::string function_name_element::visit
+    (
+     format &f, 
+     const log_param_t &log_param
+    )
+    {
+      return f.accept(*this, log_param.m_func_name);
+    }
+
+    inline std::string pretty_function_name_element::visit
+    (
+     format &f, 
+     const log_param_t &log_param
+    )
+    {
+      return f.accept(*this, log_param.m_func_sig);
     }
 
   } // !namespace logging
