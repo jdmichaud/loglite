@@ -7,7 +7,8 @@ SRC	= ../test/logging_test.cpp		\
 	../test/logging_test_macro.cpp		\
 	../test/logging_test_multithread.cpp	\
 	../test/logging_test_qualifier.cpp	\
-	../test/logging_test_xml_output.cpp	
+	../test/logging_test_xml_output.cpp	\
+	../test/logging_test_scope.cpp
 SRC2	= ../test/logging_test_multi_file.cpp	\
 	../test/logging_test_multi_file2.cpp
 SRC3	= ../test/logging_test_iostream.cpp	\
