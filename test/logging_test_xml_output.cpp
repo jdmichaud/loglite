@@ -17,6 +17,9 @@ int main(int argc, char **argv)
 {
   BOOST_LOG_INIT(("\t<log>" >> eol >>
       "\t\t<mask>" >> mask >> "</mask>" >> eol >>
+      "\t\t<function_name>" >> function_name >> "</function_name>" >> eol >>
+      "\t\t<function_signature>" >> function_signature 
+                  >> "</function_signature>" >> eol >>
       "\t\t<filename>" >> filename >> "</filename>" >> eol >>
       "\t\t<line>" >> line >> "</line>" >> eol >>
       "\t\t<time>" >> boost::logging::time >> "</time>" >> eol >>
