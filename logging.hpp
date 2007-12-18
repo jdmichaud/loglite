@@ -70,7 +70,7 @@
                               &qualifier,                                     \
                               string_stream.str(),                            \
                               __FILE__, __LINE__,                             \
-                              __func__, __PRETTY_FUNCTION__ };                \
+                              __func__, __PRETTY_FUNCTION__, NULL };          \
     l->trace(log_param);                                                      \
   }                                                                           \
 }
@@ -89,10 +89,19 @@
                               &qualifier,                                     \
                               string_stream.str(),                            \
                               __FILE__, __LINE__,                             \
-                              __func__, __PRETTY_FUNCTION__ } ;               \
+                              __func__, __PRETTY_FUNCTION__, NULL } ;         \
     l->unformatted_trace(log_param);                                          \
   }                                                                           \
 }
+
+#define BOOST_LOG_SCOPE( mask, scope_object )                                 \
+  boost::logging::scope_item scope_object                                     \
+  (                                                                           \
+    mask,                                                                     \
+    &boost::logging::scope,                                                   \
+    __FILE__, __LINE__,                                                       \
+    __func__, __PRETTY_FUNCTION__                                             \
+  );
 
 #else // !BOOST_NO_CODE_GENERATION_FOR_LOG
 #define BOOST_LOG_INIT( format )
@@ -130,12 +139,14 @@ namespace boost {
     class format;
     class sink;
     class logger;
+    class scope_item;
     
 //  Logging typedefs declarations --------------------------------------------//
     typedef enum { SINK = 0, FORMAT }                   sink_format_assoc_e;
     typedef std::list<boost::shared_ptr<log_element> >  element_list_t;
     typedef std::list<boost::shared_ptr<std::ostream> > stream_list_t;
     typedef unsigned short                              mask_t;
+    typedef std::vector<scope_item *>                   scope_stack_t;
     typedef struct
     {
       mask_t           m_mask;
@@ -145,6 +156,7 @@ namespace boost {
       unsigned int     m_line;
       std::string      m_func_name;
       std::string      m_func_sig;
+      scope_stack_t    *m_scope;
     } log_param_t;
     typedef std::list<format>                           format_list_t;
     typedef tuple<sink, format>                         sink_format_assoc_t;
@@ -181,6 +193,14 @@ namespace boost {
       notice_qualifier() { m_identifier = "notice"; }
       bool operator==(const qualifier &q) 
       { return (dynamic_cast<const notice_qualifier *>(&q) != NULL); }
+    };
+
+    class scope_qualifier : public qualifier
+    {
+    public:
+      scope_qualifier() { m_identifier = "scope"; }
+      bool operator==(const qualifier &q) 
+      { return (dynamic_cast<const scope_qualifier *>(&q) != NULL); }
     };
 
     class warning_qualifier : public qualifier
@@ -292,7 +312,10 @@ namespace boost {
       std::string m_qualifier_identifier;
     };
 
-    class eot_element : public log_element  //end-of-trace qualifier
+    // end-of-trace qualifier
+    // Used to delimite a formatted trace when transmitted through network
+    // or shared_memory streams.
+    class eot_element : public log_element
     {
     public:
       std::string to_string() { return "\f"; };
@@ -313,7 +336,17 @@ namespace boost {
       std::string visit(format &f, const log_param_t &log_param);
     };
 
-//  Format class declatation ------------------------------------------------//
+    // scope qualifier
+    // Dump a string containing the stack scope maintained by the
+    // creation of scope_item object or the call to macro BOOST_LOG_SCOPE
+    class scope_element : public log_element  
+    {
+    public:
+      std::string to_string(scope_stack_t *s);
+      std::string visit(format &f, const log_param_t &log_param);
+    };
+
+//  Format class declaration ------------------------------------------------//
     class format
     {
     public:
@@ -375,6 +408,10 @@ namespace boost {
         return e.to_string(s);
       }
       std::string accept(pretty_function_name_element &e, const std::string& s)
+      {
+        return e.to_string(s);
+      }
+      std::string accept(scope_element &e, scope_stack_t *s)
       {
         return e.to_string(s);
       }
@@ -449,9 +486,11 @@ namespace boost {
                        function_name   = function_name_element();
     static pretty_function_name_element 
                   function_signature   = pretty_function_name_element();
+    static scope_element   scope_stack = scope_element();
 
     static log_qualifier     log       = log_qualifier();
     static notice_qualifier  notice    = notice_qualifier();
+    static scope_qualifier   scope     = scope_qualifier();
     static warning_qualifier warning   = warning_qualifier();
     static error_qualifier   error     = error_qualifier();
 
@@ -510,7 +549,8 @@ namespace boost {
                  const std::string &f = "<unknown>",
                  unsigned int l = 0)
       {
-        log_param_t log_param = { m, &q, s, f, l, "<unknown>", "<unknown>" };
+        log_param_t log_param = { m, &q, s, f, l, 
+                                  "<unknown>", "<unknown>", NULL };
         trace(log_param);
       }
 
@@ -519,16 +559,18 @@ namespace boost {
                              const std::string &s)
       {
         log_param_t log_param = { m, &q, s, 
-                                  "<unknown>", 0, "<unknown>", "<unknown>" };
+                                  "<unknown>", 0, 
+                                  "<unknown>", "<unknown>", NULL };
         unformatted_trace(log_param);
       }
 
-      void trace(const log_param_t &log_param)
+      void trace(log_param_t &log_param)
       {
 #if defined(BOOST_HAS_THREADS)
         boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
+        log_param.m_scope = &m_scope_stack; // Attach the scope stack here
         sink_format_assoc_list_t::iterator 
           s_it = m_sink_format_assoc.begin();
         for (; s_it != m_sink_format_assoc.end(); ++s_it)
@@ -537,7 +579,10 @@ namespace boost {
         }
       }
       
-      void unformatted_trace(const log_param_t &log_param);
+      void unformatted_trace(log_param_t &log_param);
+
+      void push_scope(scope_item *s) { m_scope_stack.push_back(s); }
+      void pop_scope() { m_scope_stack.pop_back(); }
 
     private:
       format_list_t            m_format_list;
@@ -547,11 +592,65 @@ namespace boost {
       // added to the logger. If no sink as a log mask matching the global
       // mask for a trace, the trace does not need to be evaluated.
       mask_t                  m_global_log_mask;
+
+      // The scope stack. Can be access using the scope_stack element
+      scope_stack_t           m_scope_stack;
+
 #if defined(BOOST_HAS_THREADS)
       boost::mutex             m_mutex;
 #endif // BOOST_HAS_THREADS
     };  // logger
-    
+
+//  Scope Logger class declaration -------------------------------------------//
+    class scope_item
+    {
+    public:
+      scope_item(const std::string &scope_identifier,
+                 mask_t mask = BOOST_LOG_LEVEL_1)
+        : m_scope_identifier(scope_identifier),
+          m_mask(mask)
+      {
+        log_param_t lp = { m_mask, &scope, 
+                           "Entering " + m_scope_identifier,
+                           "<unknown>", 0, 
+                           "<unknown>", "<unknown>", NULL };
+        m_log_param = lp;
+        g__logger->trace(m_log_param);
+        g__logger->push_scope(this);
+      }
+      
+      scope_item(mask_t m,
+                 qualifier *q,
+                 const std::string &f,
+                 unsigned int l,
+                 const std::string &func_name,
+                 const std::string &func_sig)
+        : m_scope_identifier(func_name),
+          m_mask(m)
+      {
+        log_param_t lp = { m, q, "Entering " + func_name,
+                           f, l, func_name, func_sig, NULL };
+        m_log_param = lp;
+        g__logger->trace(m_log_param);
+        g__logger->push_scope(this);
+      }
+
+      ~scope_item()
+      {
+        m_log_param.m_trace = "Exiting " + m_scope_identifier;
+        g__logger->trace(m_log_param);
+        g__logger->pop_scope();
+      }
+
+      std::string get_id() { return m_scope_identifier; }
+
+    private:
+      std::string m_scope_identifier;
+      mask_t      m_mask;
+
+      log_param_t m_log_param;
+    };
+
 //  Element functions definition ---------------------------------------------//
     inline std::string log_element::visit(format &f, 
                                           const log_param_t &log_param)
@@ -599,6 +698,12 @@ namespace boost {
     )
     {
       return f.accept(*this, log_param.m_func_sig);
+    }
+
+    inline std::string scope_element::visit(format &f, 
+                                            const log_param_t &log_param)
+    {
+      return f.accept(*this, log_param.m_scope);
     }
 
   } // !namespace logging
@@ -651,11 +756,13 @@ inline boost::logging::element_list_t operator>>(
 }
 
 inline
-void boost::logging::logger::unformatted_trace(const log_param_t &log_param)
+void boost::logging::logger::unformatted_trace(log_param_t &log_param)
 {
 #if defined(BOOST_HAS_THREADS)
   boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
+
+  log_param.m_scope = &m_scope_stack; // Attach the scope stack here
   sink_format_assoc_list_t::iterator 
     s_it = m_sink_format_assoc.begin();
   for (; s_it != m_sink_format_assoc.end(); ++s_it)
@@ -664,5 +771,22 @@ void boost::logging::logger::unformatted_trace(const log_param_t &log_param)
       get<SINK>(*s_it).consume_trace(f, log_param);
     }
 }
+
+inline
+std::string boost::logging::scope_element::to_string(scope_stack_t *s)
+{ 
+  scope_stack_t::iterator it = s->begin();
+  std::string scope_str;
+  for (; it != s->end(); ++it)
+  {
+    if (it == s->begin())
+      scope_str += (*it)->get_id();
+    else
+      scope_str += " -> " + (*it)->get_id();
+  }
+  
+  return scope_str;
+};
+
 
 #endif  // !BOOST_LOGGING_HPP
