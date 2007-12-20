@@ -15,15 +15,17 @@
 #include <list>
 #include <stack>
 #include <string>
+#include <locale>
 #include <ostream>
 #include <sstream>
 #include <stdio.h>
 #include <algorithm>
 #include <exception>
+#include <boost/ref.hpp>
+#include <boost/bind.hpp>
+#include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/bind.hpp>
-#include <boost/ref.hpp>
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
 #endif
@@ -32,9 +34,10 @@
 #  include <boost/thread/thread.hpp>
 #  include <boost/thread/condition.hpp>
 #endif // BOOST_HAS_THREADS
+#include <boost/date_time/date_facet.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/format.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 // Code copied from redhat website
 #if __STDC_VERSION__ < 199901L
@@ -173,6 +176,7 @@ namespace boost {
     {
     public:
       qualifier() {}
+      virtual ~qualifier() {}
       inline std::string to_string() const { return m_identifier; }
       virtual bool operator==(const qualifier &q) { return false; }
     protected:
@@ -223,6 +227,7 @@ namespace boost {
     class log_element
     {
     public:
+      virtual ~log_element() {}
       virtual std::string to_string() { assert(0); return ""; };
 
       virtual std::string visit(format &f, const log_param_t &log_param);
@@ -259,11 +264,35 @@ namespace boost {
     class date_element : public log_element
     {
     public:
+      date_element()
+      {
+        m_output_facet = new boost::gregorian::date_facet();
+        m_output_facet->set_iso_extended_format();
+        m_ss.reset(new std::stringstream());
+        m_ss->imbue(std::locale(std::locale::classic(), m_output_facet));
+      }
+
+      date_element(const std::string &format)
+      {
+        m_output_facet = new boost::gregorian::date_facet();
+        m_output_facet->format(format.c_str());
+        m_ss.reset(new std::stringstream());
+        m_ss->imbue(std::locale(std::locale::classic(), m_output_facet));
+      }
+
       std::string to_string()
       {
         boost::gregorian::date d(boost::gregorian::day_clock::local_day());
-        return boost::gregorian::to_iso_extended_string(d);
+        m_ss->str("");
+        (*m_ss) << d;
+        return m_ss->str();
       }
+
+    private:
+      boost::shared_ptr<std::stringstream> m_ss;
+      // no shared ptr. the stringstream take ownership of the facet
+      // once imbue called.
+      boost::gregorian::date_facet *m_output_facet;
     };
     
     class time_element : public log_element
