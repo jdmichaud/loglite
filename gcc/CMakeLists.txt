@@ -42,3 +42,5 @@ TARGET_LINK_LIBRARIES(test_scope boost_thread-gcc40-mt-d boost_date_time-gcc40-m
 ADD_EXECUTABLE(test_xml_output ../test/logging_test_xml_output.cpp)
 TARGET_LINK_LIBRARIES(test_xml_output boost_thread-gcc40-mt-d boost_date_time-gcc40-mt-d boost_system-gcc40-mt-d pthread)
 
+ADD_EXECUTABLE(test_format ../test/logging_test_format.cpp)
+TARGET_LINK_LIBRARIES(test_format boost_thread-gcc40-mt-d boost_date_time-gcc40-mt-d boost_system-gcc40-mt-d pthread)
