@@ -34,7 +34,9 @@
 #  include <boost/thread/thread.hpp>
 #  include <boost/thread/condition.hpp>
 #endif // BOOST_HAS_THREADS
+#include <boost/filesystem.hpp>
 #include <boost/date_time/date_facet.hpp>
+#include <boost/date_time/time_facet.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
@@ -247,8 +249,23 @@ namespace boost {
     class filename_element : public log_element
     {
     public:
-      std::string to_string(const std::string &f) { return f; }
+      typedef enum { full_path, filename_only } display_format_e;
+
+      filename_element() : m_display_format(full_path) {}
+      filename_element(display_format_e d) : m_display_format(d) {}
+
+      std::string to_string(const std::string &f) 
+      { 
+        if (m_display_format == full_path)
+          return f;
+        
+        boost::filesystem::path p(f);
+        return p.leaf();
+      }
       std::string visit(format &f, const log_param_t &log_param);
+
+    private:
+      display_format_e m_display_format;
     };
     
     class line_element : public log_element
@@ -298,12 +315,36 @@ namespace boost {
     class time_element : public log_element
     {
     public:
+      time_element()
+      {
+        m_output_facet = new boost::posix_time::time_facet();
+        m_output_facet->set_iso_extended_format();
+        m_ss.reset(new std::stringstream());
+        m_ss->imbue(std::locale(std::locale::classic(), m_output_facet));
+      }
+
+      time_element(const std::string &format)
+      {
+        m_output_facet = new boost::posix_time::time_facet();
+        m_output_facet->format(format.c_str());
+        m_ss.reset(new std::stringstream());
+        m_ss->imbue(std::locale(std::locale::classic(), m_output_facet));
+      }
+
       std::string to_string() 
       { 
         boost::posix_time::ptime 
           t(boost::posix_time::microsec_clock::local_time());
-        return boost::posix_time::to_simple_string(t); 
+        m_ss->str("");
+        (*m_ss) << t;
+        return m_ss->str();
       };
+
+    private:
+      boost::shared_ptr<std::stringstream> m_ss;
+      // no shared ptr. the stringstream take ownership of the facet
+      // once imbue called.
+      boost::posix_time::time_facet *m_output_facet;
     };
     
     class trace_element : public log_element

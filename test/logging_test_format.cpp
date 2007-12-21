@@ -15,12 +15,13 @@ namespace bl = boost::logging;
 
 int main(int argc, char **argv)
 {
-  BOOST_LOG_INIT(("[" >> bl::mask >> "],"
-                      >> bl::filename >> "("
-                      >> bl::line >> "),"
-                      >> (*new bl::date_element("%d/%m/%Y")) >> ","
-                      >> bl::trace
-                      >> bl::eol)); // log format
+  BOOST_LOG_INIT((" L" >> bl::mask >> ","
+                       >> (*new bl::filename_element(bl::filename_element::filename_only)) >> "("
+                       >> bl::line >> "),"
+                       >> (*new bl::date_element("%d/%m/%Y")) >> " "
+                       >> (*new bl::time_element("%H:%M:%S%F")) >> ","
+                       >> bl::trace
+                       >> bl::eol)); // log format
 
   bl::sink s1(&std::cout, BOOST_LOG_MASK_LEVEL_2);
   s1.attach_qualifier(bl::log);
