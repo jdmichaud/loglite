@@ -1,0 +1,373 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <title>Loglite: Index</title>
+    <meta name="generator" content="HTML Tidy, see www.w3.org">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href="../../../boost.css">
+  </head>
+  <body>
+    <p></p>
+    <table id="Table1" cellspacing="1" cellpadding="1" width="100%" border="0">
+      <tr>
+        <td valign="top" width="300">
+          <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+        </td>
+        <td width="353">
+          <h1 align="center">Loglite</h1>
+          <h2 align="center">Tutorial</h2>
+        </td>
+        <td width="50">
+          <h3><a href="index.html"><img height="45" width="43" alt="Boost Libraries Index" src="uarrow.gif" border="0"></a></h3>
+        </td>
+      </tr>
+    </table>
+    <hr>
+    <h2>Tutorial</h2>
+    First, we assume boost is installed and compiled correctly, as descriped 
+    <a href="../../../more/getting_started.html#Build_Install">there</a>. Boost.Date_Time, 
+    Boost.Shared_Ptr and eventually Boost.Thread must be compiled. 
+    <br>
+    <h3><a name="hello_world"></a>Hello World</h3>
+    Here is the Hello World! example:
+    
+    <pre>
+#include &lt;iostream&gt;
+#include &lt;fstream&gt;
+#include &lt;logging.hpp&gt;
+
+int main()
+{
+  BOOST_LOG_INIT( (boost::logging::trace >> boost::logging::eol) ); //log format
+   
+  boost::logging::sink sink_cout(&std::cout);
+  boost::logging::sink sink_file(new std::ofstream("./output.log"));
+  sink_cout.attach_qualifier(boost::logging::log);
+  sink_file.attach_qualifier(boost::logging::log);
+  
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
+
+  BOOST_LOG_(1, "Hello World!");
+  return 0;
+}
+    </pre>
+    &nbsp;&nbsp;The macro <b>BOOST_LOG_INIT</b> initializes the logger object which is a static
+    member used as a singleton. This is a limitation of Boost.Logging. Only one
+    object can be used for logging through a program, but this is the cost of
+    simplicity. It will allow us to use the macro <b>BOOST_LOG_</b> anywhere in our
+    source code to trace effortlessly.
+    
+    <br>
+    <br>
+    &nbsp;&nbsp;&nbsp;- The only  argument of <b>BOOST_LOG_INIT</b> is
+    the format used  to produce the log. This  format is defined using
+    element  of log.  Basically here,  it tells  the logguer  to first
+    display the message of the log (what we call the <i>trace</i>) and
+    then    append    an    end-of-line.    You    can    refere    to
+    this  <a href="reference.html#element">  page</a>  for a  complete
+    reference of log elements.
+
+    <br>
+    <br>
+    We, then, define sinks. A sink is an object attached to the logger
+    that filters and eventually print  out traces. It will allow us to
+    have different  format, different log level  for different output.
+    In our example here, we have  2 sinks. A sink that is connected to
+    the standard  output (std::cout) and one connected  to an ofstream
+    (itself outputting to a file  called output.log).  Then we need to
+    specify which kind  of trace is going through  our sink. Here, for
+    both sink, we are accepting onlu logging::log.  There is different
+    qualifier  (log, warning,  error, etc...).  Each are  for specific
+    usage. You can  define more by yourself if you  need to, just look
+    at logging.hpp.
+
+    <br>
+    <br>
+    &nbsp;&nbsp;The    macro   <b>BOOST_LOG_ADD_OUTPUT_STERAM</b>   is
+    connecting the sink  to the logger. By default,  the sink will use
+    the  last  format  added  to  the logger.  Here,  the  one  define
+    in  <b>BOOST_LOG_INIT</b>.  If  you want  to specify  a particular
+    format to a sink, please refer to the next examples.
+
+    <br>
+    <br>
+    &nbsp;&nbsp;The macro  <b>BOOST_LOG_</b> is used to  trace. It can
+    be used  anywhere as soon  as <b>BOOST_LOG_INIT</b> is  called and
+    wherever you  include logging.hpp.  Other macro exists  to produce
+    traces, they are described in the reference.
+    
+    <br>
+    &nbsp;&nbsp;&nbsp;- The first argument specifies the log level.
+    <br>
+    &nbsp;&nbsp;&nbsp;- The second argument specifies the trace itself. This trace can be
+    a stream of strings and so can easily be used to trace anything that can be inserted
+    into a <i>std::stringstream</i>.
+
+    <h3><a name="example1"></a>A real trace</h3>
+    <pre>
+#include &lt;fstream&gt;
+#include &lt;logging.hpp&gt;
+
+int infinite_loop()
+{
+  BOOST_LOG_L1("oops...");
+  while (1) ;
+}
+
+int foo()
+{
+  BOOST_LOG_(1, "foo called");
+  return 7;
+}
+
+int main(int argc, char **argv)
+{
+  BOOST_LOG_INIT(("[" &gt;&gt; boost::logging::mask &gt;&gt; "],"
+                      &gt;&gt; boost::logging::filename &gt;&gt; "("
+                      &gt;&gt; boost::logging::line &gt;&gt; "),"
+                      &gt;&gt; boost::logging::time &gt;&gt; ","
+                      &gt;&gt; boost::logging::trace
+                      &gt;&gt; boost::logging::eol)); // log format
+
+  boost::logging::sink s1(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_2);
+  s1.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
+
+  boost::logging::sink s2(&std::cout, BOOST_LOG_MASK_LEVEL_2);
+  s2.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s2);
+
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "something");
+  BOOST_LOG_(BOOST_LOG_LEVEL_2, "something else");
+  BOOST_LOG_(BOOST_LOG_LEVEL_3, "If you evaluate me you die!" << infinite_loop());
+  char you_want[256] = "you want";
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "Let's say " << you_want << " to display " << 2);
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "foo will be evaluated: " << foo());
+  return 0;
+}
+    </pre>
+    Output is:
+    <pre>
+[1],/home/michaudjd/c++/loglite/test/logging_test_macro.cpp(43),2008-01-05 06:35:35.694131,something
+[2],/home/michaudjd/c++/loglite/test/logging_test_macro.cpp(44),2008-01-05 06:35:35.701461,something else
+[1],/home/michaudjd/c++/loglite/test/logging_test_macro.cpp(47),2008-01-05 06:35:35.703590,Let's say you want to display 2
+[1],/home/michaudjd/c++/loglite/test/logging_test_macro.cpp(22),2008-01-05 06:35:35.705387,foo called
+[1],/home/michaudjd/c++/loglite/test/logging_test_macro.cpp(48),2008-01-05 06:35:35.706065,foo will be evaluated: 7
+    </pre>
+    &nbsp;&nbsp;Several feature of  loglite are presented here. First,
+    we introduce the log mask. This concept allow us to have different
+    level of log  message. Some more important than  others. Thanks to
+    the mask,  the logger in filtering  what is logged or  not. If you
+    define a mask level of 2 for your sink, as for the fiel output.log
+    in the example. Then, an trace with a superior mask level (so less
+    important)  will be  ignored.  Ignored means  that  it's not  even
+    evaluated.  Here, the function infinite_loop is  not called,  because the
+    level is too high.
+
+    <br>
+    <h3><a name="example2"></a>Produce XML</h3>
+    <pre>
+#include &lt;boost/bind.hpp&gt;
+#include &lt;fstream&gt;
+#include &lt;boost/logging.hpp&gt;
+
+int main(int argc, char **argv)
+{
+  BOOST_LOG_INIT(("\t&lt;log&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;level&gt;" &gt;&gt; boost::logging::level &gt;&gt; "&lt;/level&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;filename&gt;" &gt;&gt; boost::logging::filename &gt;&gt; "&lt;/filename&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;line&gt;" &gt;&gt; boost::logging::line &gt;&gt; "&lt;/line&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;time&gt;" &gt;&gt; boost::logging::time &gt;&gt; "&lt;/time&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;trace&gt;" &gt;&gt; boost::logging::eol &gt;&gt; "\t\t\t" &gt;&gt;
+        boost::logging::trace &gt;&gt; boost::logging::eol &gt;&gt;
+      "\t\t&lt;/trace&gt;" &gt;&gt; boost::logging::eol &gt;&gt;
+    "\t&lt;/log&gt;" &gt;&gt; boost::logging::eol),
+    2); // Max log level
+  
+  sink sink_file(new std::ofstream("./output.xml"), BOOST_LOG_MASK_LEVEL_2);
+  sink_file.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
+
+  sink sink_cout(&std::cout, BOOST_LOG_MASK_LEVEL_2);
+  sink_cout.attach_qualifier(boost::logging::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
+
+  boost::gregorian::date d(boost::gregorian::day_clock::local_day());
+  std::string date = boost::gregorian::to_iso_extended_string(d);
+
+  BOOST_LOG_UNFORMATTED(1, "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;" &lt;&lt; std::endl);
+  BOOST_LOG_UNFORMATTED(1, "&lt;log_session date=\"" &lt;&lt; date &lt;&lt; "\"&gt;" &lt;&lt; std::endl);
+
+  BOOST_LOG_(1, "Strange women lying in ponds distributing swords");
+  BOOST_LOG_(1, "is no basis for a system of government");
+  BOOST_LOG_(1, "Supreme executive power derives from a mandate of the masses");
+  BOOST_LOG_(1, "not from some farcical aquatic ceremony!");
+
+  BOOST_LOG_UNFORMATTED(1, "&lt;/log_session&gt;");
+  
+  return 0;
+}
+    
+    </pre>
+    Output:
+    <pre>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;log_session date="2007-03-31"&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;27&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.655552&lt;/time&gt;
+		&lt;trace&gt;
+			Strange women lying in ponds distributing swords
+		&lt;/trace&gt;
+	&lt;/log&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;28&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.655552&lt;/time&gt;
+		&lt;trace&gt;
+			is no basis for a system of government
+		&lt;/trace&gt;
+	&lt;/log&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;29&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.665566&lt;/time&gt;
+		&lt;trace&gt;
+			Supreme executive power derives from a mandate of the masses
+		&lt;/trace&gt;
+	&lt;/log&gt;
+	&lt;log&gt;
+		&lt;level&gt;1&lt;/level&gt;
+		&lt;filename&gt;logging_test_xml_output.cpp&lt;/filename&gt;
+		&lt;line&gt;30&lt;/line&gt;
+		&lt;time&gt;2007-Mar-31 21:19:38.665566&lt;/time&gt;
+		&lt;trace&gt;
+			not from some farcical aquatic ceremony!
+		&lt;/trace&gt;
+	&lt;/log&gt;
+&lt;/log_session&gt;    
+    </pre>
+
+    Here loglite produces xml output. Not that the header and footer are produced using the macro <b>BOOST_LOG_UNFORMATTED</b> which ignores the format attached to the sink.
+
+    <br>
+    <h3><a name="example3"></a>Different sink with different formats and qualifiers</h3>
+    <pre>
+#include &lt;fstream&gt;
+#include &lt;logging.hpp&gt;
+
+using namespace boost::logging;
+namespace bl = boost::logging;
+
+void overheat(int d)
+{
+  BOOST_LOG(2, bl::log, "overheat called");
+  BOOST_LOG(1, bl::warning, "Warning: Tube overheat! Shutdown system immediatly");
+  BOOST_LOG(1, bl::error, "ERROR: tube overheat: " &lt;&lt; d &lt;&lt; "d C. Shutdown should follow");
+}
+
+int do_something()
+{
+  BOOST_LOG(2, bl::log, "do_something called");
+  BOOST_LOG(2, bl::notice, "do_something is performing some fancy processing (useless log don't you think?)");
+
+  return 7;
+}
+
+int main(int argc, char **argv)
+{
+  boost::logging::logger_p l = boost::logging::logger::get_instance();
+
+  boost::logging::format display_format(boost::logging::trace &gt;&gt; boost::logging::eol);
+  boost::logging::format file_format("[" &gt;&gt; boost::logging::mask &gt;&gt; "],"
+                                         &gt;&gt; boost::logging::filename &gt;&gt; "("
+                                         &gt;&gt; boost::logging::line &gt;&gt; "),"
+                                         &gt;&gt; boost::logging::time &gt;&gt; ","
+                                         &gt;&gt; boost::logging::trace
+                                         &gt;&gt; boost::logging::eol); // log format
+  l-&gt;add_format(display_format);
+  l-&gt;add_format(file_format);
+
+
+  boost::logging::sink file_sink(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_3);
+  file_sink.attach_qualifier(bl::log);
+  file_sink.attach_qualifier(bl::error);
+  l-&gt;add_sink(file_sink, file_format);
+
+  boost::logging::sink display_sink(&std::cout, BOOST_LOG_MASK_LEVEL_1);
+  display_sink.attach_qualifier(bl::notice);
+  display_sink.attach_qualifier(bl::warning);
+  l-&gt;add_sink(display_sink, display_format);
+
+  BOOST_LOG(BOOST_LOG_LEVEL_1, bl::log, "Application starting");
+  BOOST_LOG(BOOST_LOG_LEVEL_1, bl::notice, "Application version 1.0.3 - Copyright(2007) World Company");
+
+  BOOST_LOG(BOOST_LOG_LEVEL_1, bl::log, "do_something returned: " << do_something());
+  overheat(87);
+  return 0;
+}
+</pre>
+
+    <br>
+    &nbsp;&nbsp;In this example, we are using Loglite to display error
+    and warning message on the  screen with almost no formatting (only
+    the  addition of  an  end of  line)  but also  output more  detail
+    debugging message to an output file, with a more complex format.
+
+    &nbsp;&nbsp;Also,  the  terminal  is  receiving only  warning  and
+    notice trace when the output  debugging file received only log and
+    error message.
+
+    <br>
+    <h3><a name="example4"></a>Define log element format</h3>
+    <pre>
+#include &lt;fstream&gt;
+#include &lt;logging.hpp&gt;
+
+namespace bl = boost::logging;
+
+int main(int argc, char **argv)
+{
+  BOOST_LOG_INIT((" L" &gt;&gt; bl::mask &gt;&gt; ","
+                       &gt;&gt; (*new bl::filename_element(bl::filename_element::filename_only)) &gt;&gt; "("
+                       &gt;&gt; bl::line &gt;&gt; "),"
+                       &gt;&gt; (*new bl::date_element("%d/%m/%Y")) &gt;&gt; " "
+                       &gt;&gt; (*new bl::time_element("%H:%M:%S%F")) &gt;&gt; ","
+                       &gt;&gt; bl::trace
+                       &gt;&gt; bl::eol)); // log format
+
+  bl::sink s1(&std::cout, BOOST_LOG_MASK_LEVEL_2);
+  s1.attach_qualifier(bl::log);
+  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
+
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "Hello, I'm H.G. Pennypacker");
+  BOOST_LOG_(BOOST_LOG_LEVEL_2, "wealthy american industrialist");
+  BOOST_LOG_(BOOST_LOG_LEVEL_2, "philantropist and ...");
+  BOOST_LOG_(BOOST_LOG_LEVEL_1, "bicyclist!");
+
+  return 0;
+}
+    </pre>
+
+    &nbsp;&nbsp;Most log elements can be customize to match your requirements. In this
+    example, we  choose to display the  filename without its  path, and we
+    also  have  customize  the  date  and  time  format.  For  the  format
+    definition  for   date  and  time,  please   refer  to  Boost.DateTime
+    documentation.
+
+    <hr>
+    <p>Revised 
+       <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan --> 
+       31&nbsp;March 2007&nbsp; 
+       <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+    <p><i>© Copyright Jean-Daniel Michaud&nbsp;2007
+    <P><I>Use, modification and distribution are subject to the Boost Software License, 
+          Version 1.0. (See accompanying file <A href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</A>
+          or copy at <A href="http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</A>)</I></P>
+  </body>
+</html>
