@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
   <head>
-    <title>Boost.Logging: Index</title>
+    <title>Loglite: Index</title>
     <meta name="generator" content="HTML Tidy, see www.w3.org">
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <link rel="stylesheet" type="text/css" href="../../../boost.css">
@@ -14,7 +14,7 @@
           <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
         </td>
         <td width="353">
-          <h1 align="center">Boost.Logging</h1>
+          <h1 align="center">Loglite</h1>
           <h2 align="center">Reference</h2>
         </td>
         <td width="50">
@@ -40,7 +40,7 @@
       </dt>
 
     <h3><a name="macro"></a>Macro</h3>
-    <b>BOOST_LOG_INIT(format, level)</b>
+    <b>BOOST_LOG_INIT(format)</b>
     <br>&nbsp;&nbsp;This macro initializes the logger. Any call to <b>BOOST_LOG</b> before the initialization
     will be discarded.
     <br>
@@ -52,51 +52,59 @@ boost::logging::element_list_t list;
 list.push_back(<a href="reference.html#trace_element">boost::logging::trace</a>); 
 list.push_back(<a href="reference.html#eol_element">boost::logging::eol</a>);
     </pre>
-    &nbsp;&nbsp;<b>level</b>: Set the maximum log level accepted. Any log with level striclty superior will be discarded.
-    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>level_t</i></a>
 
     <br>
     <br>
-    <b>BOOST_LOG_ADD_OUTPUT_STREAM(stream)</b>
-    <br>&nbsp;&nbsp;This macro add a stream to the list. Any call to <b>BOOST_LOG</b> with an empty stream list
+    <b>BOOST_LOG_ADD_OUTPUT_STREAM(sink)</b>
+    <br>&nbsp;&nbsp;This macro add a sink to the list. Any call to <b>BOOST_LOG</b> when the sink list is empty
     will be discarded.
     <br>
-    <br>&nbsp;&nbsp;<b>stream</b>: stream to add. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
-    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <i>std::ostream *</i></a>
+    <br>&nbsp;&nbsp;<b>sink</b>: sink to add. It will be associated with the last format added to the logger.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <i>boost::logging::sink</i></a>
     <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
     <pre>
-BOOST_LOG_ADD_OUTPUT_STREAM(new std::ofstream("./output.log"))
-BOOST_LOG_ADD_OUTPUT_STREAM(&std::cout)
+bl::sink s1(&std::cout, BOOST_LOG_MASK_LEVEL_2);
+s1.attach_qualifier(bl::log);
+BOOST_LOG_ADD_OUTPUT_STREAM(s1);
     </pre>
 
-    <b>BOOST_LOG(level, trace)</b>
+    <b>BOOST_LOG(mask_level, qualifier, trace)</b>
     <br>&nbsp;&nbsp;This macro log the trace. Any call to <b>BOOST_LOG</b> before the initialization
     will be discarded.
     <br>
-    <br>&nbsp;&nbsp;<b>level</b>: log level. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
-    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>level_t</i></a>
+    <br>&nbsp;&nbsp;<b>mask_level</b>: The mask log level. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>mask_t</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
+    <br>
+    <br>&nbsp;&nbsp;<b>qualifier</b>: The qualifier. Will be bounded to the <a href="reference.html#qualifier_element">qualifier_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>mask_t</i></a>
     <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
     <br>
     <br>&nbsp;&nbsp;<b>tracet</b>: List of token that can be streamed into a <i>std::stringstream</i>.
     <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>std::stringstream</i></a>
     <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
     <pre>
-BOOST_LOG(1, "The error code is: " << errno())
+BOOST_LOG(1, log, "The error code is: " << errno())
     </pre>
 
-    <b>BOOST_LOG_UNFORMATTED(level, trace)</b>
+    <b>BOOST_LOG_UNFORMATTED(mask_level, qualifier, trace)</b>
     <br>&nbsp;&nbsp;This macro log an unformatted trace. Equivalent to BOOST_LOG in usage, it will produce a log
     that will not follow the format described during the call to BOOST_LOG_INIT. Useful for header and footer of particular
     log format (i.e.: xml).
     <br>
-    <br>&nbsp;&nbsp;<b>level</b>: log level. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
-    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>level_t</i></a>
+    <br>&nbsp;&nbsp;<b>mask_level</b>: The mask log level. Will be bounded to the <a href="reference.html#level_element">level_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>mask_t</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
+    <br>
+    <br>&nbsp;&nbsp;<b>qualifier</b>: The qualifier. Will be bounded to the <a href="reference.html#qualifier_element">qualifier_element</a>.
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>mask_t</i></a>
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
     <br>
     <br>&nbsp;&nbsp;<b>tracet</b>: List of token that can be streamed into a <i>std::stringstream</i>.
     <br>&nbsp;&nbsp;&nbsp;&nbsp;type: <a href="reference.html#logger" <i>std::stringstream</i></a>
-    <br><br>&nbsp;&nbsp;example: 
+    <br>&nbsp;&nbsp;&nbsp;&nbsp;example: 
     <pre>
-BOOST_LOG_UNFORMATTED(1, "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;" << std::endl);
+BOOST_LOG_UNFORMATTED(1, log, "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;" << std::endl);
     </pre>
 
     <h3><a name="logger"></a>logger class</h3>
@@ -105,47 +113,60 @@ namespace boost {
 
   namespace logging {
     
-    typedef enum { LEVEL = 0, TRACE, FILENAME, LINE }        param_e;
+    typedef enum { SINK = 0, FORMAT }                   sink_format_assoc_e;
     typedef std::list&lt;boost::shared_ptr&lt;log_element&gt; &gt;  element_list_t;
-    typedef std::list&lt;boost::shared_ptr&lt;std::ostream&gt; &gt;  stream_list_t;
-    typedef unsigned short                              level_t;
-    typedef tuple&lt;level_t, std::string, std::string, unsigned int&gt; log_param_t;
+    typedef std::list&lt;boost::shared_ptr&lt;std::ostream&gt; &gt; stream_list_t;
+    typedef unsigned short                              mask_t;
+    typedef std::vector&lt;scope_item *&gt;                   scope_stack_t;
+    typedef struct
+    {
+      mask_t           m_mask;
+      const qualifier *m_qualifier;
+      std::string      m_trace;
+      std::string      m_filename;
+      unsigned int     m_line;
+      std::string      m_func_name;
+      std::string      m_func_sig;
+      scope_stack_t    *m_scope;
+    } log_param_t;
+    typedef std::list&lt;format&gt;                           format_list_t;
+    typedef tuple&lt;sink, format&gt;                         sink_format_assoc_t;
+    typedef std::list&lt;sink_format_assoc_t&gt;            sink_format_assoc_list_t;
+    typedef std::list&lt;qualifier *&gt;                      qualifier_list_t;
+    typedef shared_ptr&lt;logger&gt;                          logger_p;
 
     class logger
     {
     public: 
-      logger() : m_max_log_level(0) {}
-      logger(element_list_t &e, level_t max_log_level = 1) 
-         : m_element_list(e), m_max_log_level(max_log_level) {}
-    
-      void set_format(element_list_t &e);
-      void set_max_log_level(level_t max_log_level);
-      void set_output_streams(stream_list_t &s);
-      static logger *get_instance();
-              
-      // Visitors for the log elements
-      std::string accept(log_element &e);
-      std::string accept(level_element &e, level_t l);
-      std::string accept(trace_element &e, const std::string &s);
-      std::string accept(filename_element &e, const std::string &s);
-      std::string accept(line_element &e, unsigned int l);
-    
-      void trace(unsigned short l,
-                 const std::string &t, 
-                 const std::string &f, 
-                 unsigned int      ln);
+      logger();
+      static void create_instance();
+      static logger_p &get_instance();
+      void add_format(format f);
+      void add_sink(sink s);
+      void add_sink(sink s, format f);
+      inline mask_t get_global_log_mask() ;
+      void trace(mask_t m, 
+                 const qualifier &q, 
+                 const std::string &s, 
+                 const std::string &f = "<unknown>",
+                 unsigned int l = 0);
+      void unformatted_trace(mask_t m, 
+                             const qualifier &q, 
+                             const std::string &s);
+      void trace(log_param_t &log_param);      
+      void unformatted_trace(log_param_t &log_param);
 
-      void unformatted_trace(unsigned short l,
-                             const std::string &t, 
-                             const std::string &f, 
-                             unsigned int      ln);
+      void push_scope(scope_item *s);
+      void pop_scope();
+
     private:
-      element_list_t  m_element_list;
-      stream_list_t   m_stream_list;
-      level_t         m_max_log_level;
-    #if defined(BOOST_HAS_THREADS)
-      boost::mutex    m_mutex;
-    #endif // BOOST_HAS_THREADS
+      format_list_t            m_format_list;
+      sink_format_assoc_list_t m_sink_format_assoc;
+      mask_t                  m_global_log_mask;
+      scope_stack_t           m_scope_stack;
+#if defined(BOOST_HAS_THREADS)
+      boost::mutex             m_mutex;
+#endif // BOOST_HAS_THREADS
     };  // logger
   }
 }
@@ -160,7 +181,7 @@ public:
   virtual std::string visit(logger &l, const log_param_t &log_param);
 };
     </pre>
-    <h3><a name="level_element"></a>level_element class</h3>
+    <h3><a name="mask_element"></a>level_element class</h3>
     <pre>
 class level_element : public log_element
 {
@@ -183,6 +204,8 @@ public:
 class filename_element : public log_element
 {
 public:
+  filename_element() : m_display_format(full_path) {}
+  filename_element(display_format_e d) : m_display_format(d) {}
   std::string to_string();
   std::string visit(logger &l, const log_param_t &log_param);
 };
@@ -192,6 +215,8 @@ public:
 class date_element : public log_element
 {
 public:
+  date_element()
+  date_element(const std::string &format)
   std::string to_string();
 };
     </pre>
@@ -200,6 +225,8 @@ public:
 class time_element : public log_element
 {
 public:
+  time_element()
+  time_element(const std::string &format)
   std::string to_string();
 };
     </pre>
@@ -223,6 +250,56 @@ private:
   std::string m_literal;
 };
     </pre>
+
+    <h3><a name="eot_element"></a>eot_element</h3>
+    <pre>
+class eot_element : public log_element
+{
+public:
+  std::string to_string() { return "\f"; };
+};
+    </pre>
+
+    <h3><a name="qualifier_element"></a>qualifier_element</h3>
+    <pre>
+class qualifier_element : public log_element
+{
+public:
+  qualifier_element(const qualifier &lq);
+  std::string to_string();
+};
+    </pre>
+
+    <h3><a name="function_name_element"></a>function_name_element</h3>
+    <pre>
+class function_name_element : public log_element
+{
+public:
+  std::string to_string(const std::string &n) { return n; }
+  std::string visit(format &f, const log_param_t &log_param);
+};
+    </pre>
+
+    <h3><a name="pretty_function_name_element"></a>pretty_function_name_element</h3>
+    <pre>
+class pretty_function_name_element : public log_element
+{
+public:
+  std::string to_string(const std::string &n) { return n; }
+  std::string visit(format &f, const log_param_t &log_param);
+};
+    </pre>
+
+    <h3><a name="scope_element"></a>scope_element</h3>
+    <pre>
+class scope_element : public log_element
+{
+public:
+  std::string to_string(const std::string &n) { return n; }
+  std::string visit(format &f, const log_param_t &log_param);
+};
+    </pre>
+
     <h3><a name="eol_element"></a>eol_element class</h3>
     <pre>    
 class eol_element : public log_element
