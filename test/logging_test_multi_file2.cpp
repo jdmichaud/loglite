@@ -1,4 +1,4 @@
-//  Boost general library logging_test_multi_file.hpp header file  -----------//
+//  loglite library logging_test_multi_file.hpp header file  -----------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
@@ -12,6 +12,6 @@
 
 int foo()
 {
-  BOOST_LOG_(1, "foo called");
+  LOGLITE_LOG_(1, "foo called");
   return 0;
 }

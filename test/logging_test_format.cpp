@@ -1,4 +1,4 @@
-//  Boost general library logging_test_macro.cpp file  ------------------------//
+//  loglite library logging_test_macro.cpp file  -----------------------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
@@ -11,26 +11,30 @@
 #include <fstream>
 #include <logging.hpp>
 
-namespace bl = boost::logging;
+namespace l = loglite;
 
 int main(int argc, char **argv)
 {
-  BOOST_LOG_INIT((" L" >> bl::mask >> ","
-                       >> (*new bl::filename_element(bl::filename_element::filename_only)) >> "("
-                       >> bl::line >> "),"
-                       >> (*new bl::date_element("%d/%m/%Y")) >> " "
-                       >> (*new bl::time_element("%H:%M:%S%F")) >> ","
-                       >> bl::trace
-                       >> bl::eol)); // log format
+  LOGLITE_INIT((" L" >> l::mask >> ","
+                     >> (*new l::filename_element(l::filename_element::filename_only)) >> "("
+                     >> l::line >> "),"
+                     >> (*new l::date_element("%d/%m/%Y")) >> " "
+                     >> (*new l::time_element("%H:%M:%S%F")) >> ","
+                     >> l::trace
+                     >> l::eol)); // log format
 
-  bl::sink s1(&std::cout, BOOST_LOG_MASK_LEVEL_2);
-  s1.attach_qualifier(bl::log);
-  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
+  l::sink s1(&std::cout, LOGLITE_MASK_LEVEL_2);
+  s1.attach_qualifier(l::log);
+  LOGLITE_ADD_OUTPUT_STREAM(s1);
 
-  BOOST_LOG_(BOOST_LOG_LEVEL_1, "Hello, I'm H.G. Pennypacker");
-  BOOST_LOG_(BOOST_LOG_LEVEL_2, "wealthy american industrialist");
-  BOOST_LOG_(BOOST_LOG_LEVEL_2, "philantropist and ...");
-  BOOST_LOG_(BOOST_LOG_LEVEL_1, "bicyclist!");
+  l::sink s2(new std::ofstream("./test_format.log"), LOGLITE_MASK_LEVEL_2);
+  s2.attach_qualifier(l::log);
+  LOGLITE_ADD_OUTPUT_STREAM(s2);
+
+  LOGLITE_LOG_(LOGLITE_LEVEL_1, "Hello, I'm H.G. Pennypacker");
+  LOGLITE_LOG_(LOGLITE_LEVEL_2, "wealthy american industrialist");
+  LOGLITE_LOG_(LOGLITE_LEVEL_2, "philantropist and ...");
+  LOGLITE_LOG_(LOGLITE_LEVEL_1, "bicyclist!");
 
   return 0;
 }
