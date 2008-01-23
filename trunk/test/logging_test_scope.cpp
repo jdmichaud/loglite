@@ -14,30 +14,30 @@
 
 int bar()
 {
-  boost::logging::scope_item bar_scope("bar()");
-  BOOST_LOG_L1("Doing some processing in bar");
+  loglite::scope_item bar_scope("bar()");
+  LOGLITE_LOG_L1("Doing some processing in bar");
 }
 
 int foo(int i)
 {
-  boost::logging::scope_item foo_bar("foo()");
-  BOOST_LOG_L1("Doing some processing in foo");
+  loglite::scope_item foo_bar("foo()");
+  LOGLITE_LOG_L1("Doing some processing in foo");
 
   switch (i)
   {
   case 0:
   {
-    boost::logging::scope_item case1("case 0");
+    loglite::scope_item case1("case 0");
     break;
   }
   case 1:
   {
-    boost::logging::scope_item case1("case 1");
+    loglite::scope_item case1("case 1");
     break;
   }
   default:
   {
-    boost::logging::scope_item case1("default");
+    loglite::scope_item case1("default");
   }
   }
 
@@ -46,44 +46,44 @@ int foo(int i)
 
 int macro_bar()
 {
-  BOOST_LOG_SCOPE(BOOST_LOG_LEVEL_1, bar_scope);
-  BOOST_LOG_L1("Doing some processing in macro_bar");
+  LOGLITE_LOG_SCOPE(LOGLITE_LEVEL_1, bar_scope);
+  LOGLITE_LOG_L1("Doing some processing in macro_bar");
 }
 
 int macro_foo()
 {
-  BOOST_LOG_SCOPE(BOOST_LOG_LEVEL_1, foo_scope);
-  BOOST_LOG_L1("Doing some processing in macro_foo");
+  LOGLITE_LOG_SCOPE(LOGLITE_LEVEL_1, foo_scope);
+  LOGLITE_LOG_L1("Doing some processing in macro_foo");
 
   macro_bar();
 }
 
 int main()
 {
-  boost::logging::logger_p l = boost::logging::logger::get_instance();
+  loglite::logger_p l = loglite::logger::get_instance();
 
-  boost::logging::format display_format(boost::logging::trace >> boost::logging::eol);
-  boost::logging::format file_format("[" >> boost::logging::mask >> "],"
-                                         >> boost::logging::filename >> "("
-                                         >> boost::logging::line >> "),"
-                                         >> boost::logging::time >> ", "
-                                         >> boost::logging::scope_stack >> ", "
-                                         >> boost::logging::trace
-                                         >> boost::logging::eol); // log format
+  loglite::format display_format(loglite::trace >> loglite::eol);
+  loglite::format file_format("[" >> loglite::mask >> "],"
+                                         >> loglite::filename >> "("
+                                         >> loglite::line >> "),"
+                                         >> loglite::time >> ", "
+                                         >> loglite::scope_stack >> ", "
+                                         >> loglite::trace
+                                         >> loglite::eol); // log format
 
   l->add_format(display_format);
   l->add_format(file_format);
    
-  boost::logging::sink sink_cout(&std::cout);
-  boost::logging::sink sink_file(new std::ofstream("./output.log"));
-  sink_cout.attach_qualifier(boost::logging::log);
-  sink_file.attach_qualifier(boost::logging::log);
-  sink_file.attach_qualifier(boost::logging::scope);
+  loglite::sink sink_cout(&std::cout);
+  loglite::sink sink_file(new std::ofstream("./test_scope.log"));
+  sink_cout.attach_qualifier(loglite::log);
+  sink_file.attach_qualifier(loglite::log);
+  sink_file.attach_qualifier(loglite::scope);
 
   l->add_sink(sink_cout, display_format);
   l->add_sink(sink_file, file_format);
 
-  BOOST_LOG_L1("No stack here");
+  LOGLITE_LOG_L1("No stack here");
 
   foo(2);
   bar();

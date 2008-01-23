@@ -1,4 +1,4 @@
-//  Boost general library logging_test_multi_file.cpp header file  -----------//
+//  loglite library logging_test_multi_file.cpp header file  -----------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
@@ -15,12 +15,17 @@
 
 int main()
 {
-  BOOST_LOG_INIT((boost::logging::trace >> boost::logging::eol)); // log format
-  boost::logging::sink s(&std::cout, BOOST_LOG_MASK_LEVEL_1);
-  s.attach_qualifier(boost::logging::log);
+  LOGLITE_INIT((loglite::trace >> loglite::eol)); // log format
+  loglite::sink s(&std::cout, LOGLITE_MASK_LEVEL_1);
+  s.attach_qualifier(loglite::log);
 
-  BOOST_LOG_ADD_OUTPUT_STREAM(s);
-  BOOST_LOG_(1, "Multi file test - call to foo:");
+  loglite::sink file(new std::ofstream("./test_multi_file.log"), LOGLITE_MASK_LEVEL_1);
+  file.attach_qualifier(loglite::log);
+
+  LOGLITE_ADD_OUTPUT_STREAM(s);
+  LOGLITE_ADD_OUTPUT_STREAM(file);
+
+  LOGLITE_LOG_(1, "Multi file test - call to foo:");
   
   foo();
   return 0;

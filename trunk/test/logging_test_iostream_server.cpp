@@ -1,4 +1,4 @@
-//  Boost general library logging_test_iostream_server.cpp file  -------------//
+//  loglite library logging_test_iostream_server.cpp file  -------------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
@@ -19,10 +19,12 @@
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
 
+#include <logging.hpp>
+
 using boost::asio::ip::tcp;
 
 boost::mutex            m;
-std::ofstream           out("log.txt", std::ios::app);
+std::ofstream           out("iostream_client_server.txt", std::ios::app);
 int nbthread = 0;
 
 void push_trace(const std::string &t)
@@ -41,7 +43,7 @@ void accept(tcp::acceptor &acceptor)
   
   std::string line;
   boost::thread_group thrd_group;
-  while (std::getline(stream, line, '\f'))
+  while (std::getline(stream, line, LOGLITE_LOG_SEPARATOR))
     //thrd_group.create_thread(boost::bind(&push_trace, line));
     push_trace(line);
 

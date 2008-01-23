@@ -1,4 +1,4 @@
-//  Boost general library logging_test_hello_world.cpp header file  ----------//
+//  loglite library logging_test_hello_world.cpp header file  ----------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
@@ -14,16 +14,16 @@
 
 int main()
 {
-  BOOST_LOG_INIT( (boost::logging::trace >> boost::logging::eol) ); //log format
+  LOGLITE_INIT( (loglite::trace >> loglite::eol) ); //log format
    
-  boost::logging::sink sink_cout(&std::cout);
-  boost::logging::sink sink_file(new std::ofstream("./output.log"));
-  sink_cout.attach_qualifier(boost::logging::log);
-  sink_file.attach_qualifier(boost::logging::log);
+  loglite::sink sink_cout(&std::cout);
+  loglite::sink sink_file(new std::ofstream("./test_hello_world.log"));
+  sink_cout.attach_qualifier(loglite::log);
+  sink_file.attach_qualifier(loglite::log);
   
-  BOOST_LOG_ADD_OUTPUT_STREAM(sink_cout);
-  BOOST_LOG_ADD_OUTPUT_STREAM(sink_file);
+  LOGLITE_ADD_OUTPUT_STREAM(sink_cout);
+  LOGLITE_ADD_OUTPUT_STREAM(sink_file);
 
-  BOOST_LOG_(1, "Hello World!");
+  LOGLITE_LOG_(1, "Hello World!");
   return 0;
 }

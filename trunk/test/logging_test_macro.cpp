@@ -1,4 +1,4 @@
-//  Boost general library logging_test_macro.cpp file  ------------------------//
+//  loglite library logging_test_macro.cpp file  -----------------------------//
 
 //  (C) Copyright Jean-Daniel Michaud 2007. Permission to copy, use, modify, 
 //  sell and distribute this software is granted provided this copyright notice 
@@ -13,38 +13,38 @@
 
 int infinite_loop()
 {
-  BOOST_LOG_L1("oops...");
+  LOGLITE_LOG_L1("oops...");
   while (1) ;
 }
 
 int foo()
 {
-  BOOST_LOG_(1, "foo called");
+  LOGLITE_LOG_(1, "foo called");
   return 7;
 }
 
 int main(int argc, char **argv)
 {
-  BOOST_LOG_INIT(("[" >> boost::logging::mask >> "],"
-                      >> boost::logging::filename >> "("
-                      >> boost::logging::line >> "),"
-                      >> boost::logging::time >> ","
-                      >> boost::logging::trace
-                      >> boost::logging::eol)); // log format
+  LOGLITE_INIT(("[" >> loglite::mask >> "],"
+                    >> loglite::filename >> "("
+                    >> loglite::line >> "),"
+                    >> loglite::time >> ","
+                    >> loglite::trace
+                    >> loglite::eol)); // log format
 
-  boost::logging::sink s1(new std::ofstream("./output.log"), BOOST_LOG_MASK_LEVEL_2);
-  s1.attach_qualifier(boost::logging::log);
-  BOOST_LOG_ADD_OUTPUT_STREAM(s1);
+  loglite::sink s1(new std::ofstream("./test_macro.log"), LOGLITE_MASK_LEVEL_2);
+  s1.attach_qualifier(loglite::log);
+  LOGLITE_ADD_OUTPUT_STREAM(s1);
 
-  boost::logging::sink s2(&std::cout, BOOST_LOG_MASK_LEVEL_2);
-  s2.attach_qualifier(boost::logging::log);
-  BOOST_LOG_ADD_OUTPUT_STREAM(s2);
+  loglite::sink s2(&std::cout, LOGLITE_MASK_LEVEL_2);
+  s2.attach_qualifier(loglite::log);
+  LOGLITE_ADD_OUTPUT_STREAM(s2);
 
-  BOOST_LOG_(BOOST_LOG_LEVEL_1, "something");
-  BOOST_LOG_(BOOST_LOG_LEVEL_2, "something else");
-  BOOST_LOG_(BOOST_LOG_LEVEL_3, "If you evaluate me you die!" << infinite_loop());
+  LOGLITE_LOG(LOGLITE_LEVEL_1, loglite::log, "something");
+  LOGLITE_LOG_L2("something else"); // A log of level 2 (L2)
+  LOGLITE_LOG_(LOGLITE_LEVEL_3, "If you evaluate me you die!" << infinite_loop());
   char you_want[256] = "you want";
-  BOOST_LOG_(BOOST_LOG_LEVEL_1, "Let's say " << you_want << " to display " << 2);
-  BOOST_LOG_(BOOST_LOG_LEVEL_1, "foo will be evaluated: " << foo());
+  LOGLITE_LOG_(LOGLITE_LEVEL_1, "Let's say " << you_want << " to display " << 2);
+  LOGLITE_LOG_(LOGLITE_LEVEL_1, "foo will be evaluated: " << foo());
   return 0;
 }
