@@ -29,11 +29,11 @@
 #ifndef BOOST_CONFIG_HPP
 #  include <boost/config.hpp>
 #endif
-#if defined(BOOST_HAS_THREADS)
+#if defined(BOOST_HAS_THREADS) && !defined(LOGLITE_NO_THREAD)
 #  include <boost/thread/once.hpp>
 #  include <boost/thread/thread.hpp>
 #  include <boost/thread/condition.hpp>
-#endif // BOOST_HAS_THREADS
+#endif // BOOST_HAS_THREADS && !LOGLITE_NO_THREAD
 #include <boost/filesystem.hpp>
 #include <boost/date_time/date_facet.hpp>
 #include <boost/date_time/time_facet.hpp>
@@ -575,8 +575,17 @@ namespace loglite {
     
     static logger_p &get_instance()
     {
+#if defined(BOOST_HAS_THREADS) && !defined (LOGLITE_NO_THREAD)
       static boost::once_flag   once = BOOST_ONCE_INIT;
       boost::call_once(logger::create_instance, once);
+#else
+      static bool once = true;
+      if (once) 
+      {
+        create_instance();
+        once = false;
+      }
+#endif
       return g__logger;
     }
     
@@ -633,7 +642,7 @@ namespace loglite {
     
     void trace(log_param_t &log_param)
     {
-#if defined(BOOST_HAS_THREADS)
+#if defined(BOOST_HAS_THREADS) && !defined(LOGLITE_NO_THREAD)
       boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
@@ -664,7 +673,7 @@ namespace loglite {
     // The scope stack. Can be access using the scope_stack element
     scope_stack_t           m_scope_stack;
 
-#if defined(BOOST_HAS_THREADS)
+#if defined(BOOST_HAS_THREADS) && !defined(LOGLITE_NO_THREAD)
     boost::mutex             m_mutex;
 #endif // BOOST_HAS_THREADS
   };  // logger
@@ -820,7 +829,7 @@ inline loglite::element_list_t operator>>(loglite::element_list_t lhs,
 inline
 void loglite::logger::unformatted_trace(log_param_t &log_param)
 {
-#if defined(BOOST_HAS_THREADS)
+#if defined(BOOST_HAS_THREADS) && !defined(LOGLITE_NO_THREAD)
   boost::mutex::scoped_lock scoped_lock(m_mutex);
 #endif // BOOST_HAS_THREADS
 
