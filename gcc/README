@@ -1,8 +1,10 @@
 This is the readme file for loglite cmake makefile generation.
 First, define BOOST_INCLUDE environment variable with the path of the boost library.
-Then generate the makefile with cmake and launch a make.
+Then, define the suffix of your boost library (like: -gcc43-mt-1_39 if you have your library like libboost_thread-gcc43-mt-1_39.a)
+Finally generate the makefile with cmake and launch a make.
 example:
   export BOOST_INCLUDE=/home/you/boost_1_35_0/
+  export BOOST_LIB_SUFFIX=-gcc43-mt-1_39
   cmake CMakeLists.txt
   make
 
