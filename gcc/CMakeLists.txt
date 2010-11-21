@@ -17,7 +17,7 @@ ADD_EXECUTABLE(test_macro ../test/logging_test_macro.cpp)
 TARGET_LINK_LIBRARIES(test_macro boost_thread$ENV{BOOST_LIB_SUFFIX} boost_date_time$ENV{BOOST_LIB_SUFFIX} boost_system$ENV{BOOST_LIB_SUFFIX} pthread)
 
 ADD_EXECUTABLE(test_iostream ../test/logging_test_iostream.cpp ../test/zlib.cpp)
-TARGET_LINK_LIBRARIES(test_iostream boost_thread$ENV{BOOST_LIB_SUFFIX} boost_date_time$ENV{BOOST_LIB_SUFFIX} boost_system$ENV{BOOST_LIB_SUFFIX} pthread z)
+TARGET_LINK_LIBRARIES(test_iostream boost_thread$ENV{BOOST_LIB_SUFFIX} boost_date_time$ENV{BOOST_LIB_SUFFIX} boost_system$ENV{BOOST_LIB_SUFFIX} boost_iostreams$ENV{BOOST_LIB_SUFFIX} pthread z)
 
 ADD_EXECUTABLE(test_iostream_client ../test/logging_test_iostream_client.cpp)
 TARGET_LINK_LIBRARIES(test_iostream_client boost_thread$ENV{BOOST_LIB_SUFFIX} boost_date_time$ENV{BOOST_LIB_SUFFIX} boost_system$ENV{BOOST_LIB_SUFFIX} pthread)
