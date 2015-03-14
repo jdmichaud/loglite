@@ -14,8 +14,8 @@ You're done.
 
 Much more is possible thanks to Boost.IOStreams and Boost.Asio.
 
-* Look at logging_test_iostream.cpp for an example of log compressed on the fly
-* Look at logging_test_iostream_client.cpp and logging_test_iostream_server.cpp for logging through a network.
+* Look at [logging_test_iostream.cpp](https://github.com/jdmichaud/loglite/blob/master/test/logging_test_iostream.cpp) for an example of log compressed on the fly
+* Look at [logging_test_iostream_client.cpp](https://github.com/jdmichaud/loglite/blob/master/test/logging_test_iostream_client.cpp) and [logging_test_iostream_server.cpp](https://github.com/jdmichaud/loglite/blob/master/test/logging_test_iostream_server.cpp) for logging through a network.
 
 More examples in the trunk
 
